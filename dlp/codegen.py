@@ -208,9 +208,10 @@ def generate(json_model_file, output_path):
 
 	code_lines = []
 
+	code_lines.append('import os')
+	code_lines.append('os.system(\'pip install dlp\')')
 	code_lines.append('import tensorflow as tf')
 	code_lines.append('import numpy as np')
-	code_lines.append('import os')
 	code_lines.append('import dlp.blocks as blocks')
 	code_lines.append('import dlp.utils as utils')
 	code_lines.append('')
