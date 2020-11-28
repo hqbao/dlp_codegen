@@ -1,6 +1,6 @@
 def train(dataset_name, image_shape, epochs, total_train_examples, batch_size):
 	dataset_info = utils.get_dataset_info(dataset_name)
-	output_path = '/outputs'
+	output_path = './outputs'
 	train_anno_file_path = dataset_info['train_anno_file_path']
 	train_image_dir_path = dataset_info['train_image_dir_path']
 	ishape = image_shape
@@ -12,7 +12,7 @@ def train(dataset_name, image_shape, epochs, total_train_examples, batch_size):
 	model.summary()
 
 	weight_file_path = output_path+'/weights_'+dataset_name+'.h5'
-	if path.isdir(weight_file_path):
+	if os.path.isdir(weight_file_path):
 		model.load_weights(weight_file_path, by_name=True)
 
 	train_dataset = utils.load_image_classification_dataset(anno_file_path=train_anno_file_path)
@@ -42,4 +42,4 @@ def train(dataset_name, image_shape, epochs, total_train_examples, batch_size):
 		mean_loss = float(np.mean(loss, axis=-1))
 		print('\nLoss: {:.3f}'.format(mean_loss))
 
-		model.save_weights(output_path+'/weights_'+dataset_name+'.h5')
+		model.save_weights(weight_file_path)

@@ -163,10 +163,11 @@ def LOSS_FUNC_OD4(input_tensor, name, total_classes, lamda=1.0):
 
 	return ssd_loss
 
-def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, bn_trainable, activation, block_name):
+def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, bn_trainable, activation, name):
 	use_bias = True if use_bias == 1 else False
 	trainable = True if trainable == 1 else False
 	bn_trainable = True if bn_trainable == 1 else False
+	block_name = name
 
 	tensor = tf.keras.layers.Conv2D(
 		filters=filters, 
@@ -181,10 +182,11 @@ def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias,
 	tensor = tf.keras.layers.Activation(activation)(tensor)
 	return tensor
 
-def HOURGLASS_BLOCK(input_tensor, block_name, depth, use_bias, trainable, bn_trainable, repeat):
+def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable, repeat):
 	use_bias = True if use_bias == 1 else False
 	trainable = True if trainable == 1 else False
 	bn_trainable = True if bn_trainable == 1 else False
+	block_name = name
 	
 	tensor = input_tensor
 	filters = tensor.shape[-1];
@@ -311,10 +313,11 @@ def NMS(abox_2dtensor, prediction, nsm_iou_threshold, nsm_score_threshold, nsm_m
 
 	return boxclz_2dtensor, valid_outputs
 
-def RESNET_IDENTITY_BLOCK(input_tensor, kernel_size, filters, block_name, use_bias, trainable, bn_trainable, repeat):
+def RESNET_IDENTITY_BLOCK(input_tensor, kernel_size, filters, name, use_bias, trainable, bn_trainable, repeat):
 	use_bias = True if use_bias == 1 else False
 	trainable = True if trainable == 1 else False
 	bn_trainable = True if bn_trainable == 1 else False
+	block_name = name
 
 	def identity_block(input_tensor, kernel_size, filters, block_name, use_bias, trainable, bn_trainable):
 		'''
@@ -379,7 +382,7 @@ def RESNET_IDENTITY_BLOCK(input_tensor, kernel_size, filters, block_name, use_bi
 
 	return tensor
 
-def RESNET_SIDENTITY_BLOCK(input_tensor, kernel_size, filters, strides, block_name, use_bias, trainable, bn_trainable):
+def RESNET_SIDENTITY_BLOCK(input_tensor, kernel_size, filters, strides, name, use_bias, trainable, bn_trainable):
 	'''
 	https://arxiv.org/pdf/1512.03385.pdf
 	Bottleneck architecture
@@ -397,6 +400,7 @@ def RESNET_SIDENTITY_BLOCK(input_tensor, kernel_size, filters, strides, block_na
 	trainable = True if trainable == 1 else False
 	bn_trainable = True if bn_trainable == 1 else False
 	weight_decay = 0.0
+	block_name = name
 
 	filters1, filters2, filters3 = filters
 
@@ -446,5 +450,6 @@ def RESNET_SIDENTITY_BLOCK(input_tensor, kernel_size, filters, strides, block_na
 
 	return tensor
 
-def RFE_BLOCK(input_tensor, block_name, use_bias, trainable, bn_trainable):
+def RFE_BLOCK(input_tensor, name, use_bias, trainable, bn_trainable):
+	block_name = name
 	return input_tensor

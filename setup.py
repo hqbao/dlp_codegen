@@ -2,19 +2,20 @@ from distutils.core import setup
 setup(
     name='dlp',
     packages=['dlp'],
-    version='1.0.9',
+    version='1.0.11',
     license='MIT', # Chose a license from here: https://help.github.com/articles/licensing-a-repository
     description='Code generator',
     author='BAO',
     author_email='hqbao1991@gmail.com',
     url='https://github.com/hqbao',
-    download_url='https://github.com/hqbao/dlp/archive/v1.0.0.tar.gz',
+    download_url='https://github.com/hqbao/dlp_codegen/archive/v1.0.0.tar.gz',
     keywords=['deeplearning', 'computervision', 'deeplearningplatform', 'ai'],
     install_requires=[
         'tensorflow',
         'numpy',
         'scikit-image',
         'scipy',
+        'kaggle',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha', # "3 - Alpha", "4 - Beta" or "5 - Production/Stable"

@@ -157,13 +157,22 @@ def gen_train_part(datagen_node, code_lines):
 
 def gen_execute_part(datagen_node, code_lines):
 	train_procedure = datagen_node['params']['train_procedure'].lower()
-	if train_procedure == 'object_detection_4tiers':
+	if train_procedure == 'object_detection':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
-			', anchor_samplings='+json.dumps(datagen_node['params']['anchor_samplings'])+
+			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
+			', epochs='+str(datagen_node['params']['epochs'])+')');
+		code_lines.append('');
+	elif train_procedure == 'object_detection_4tiers':
+		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
+			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
+			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
+			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
+			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
+			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
 		code_lines.append('');
 	elif train_procedure == 'image_classification':
@@ -201,7 +210,7 @@ def generate(json_model_file, output_path):
 
 	code_lines.append('import tensorflow as tf')
 	code_lines.append('import numpy as np')
-	code_lines.append('import os.path as path')
+	code_lines.append('import os')
 	code_lines.append('import dlp.blocks as blocks')
 	code_lines.append('import dlp.utils as utils')
 	code_lines.append('')

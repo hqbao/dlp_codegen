@@ -770,21 +770,11 @@ def gentiery(bboxes, abox_2dtensor, iou_thresholds, total_classes, anchor_sampli
 
 	return clz_2dtensor, loc_2dtensor, no_match_anchors, not_enough_neg_anchors
 
-def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_samplings):
+def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_examples, total_classes, anchor_sampling):
 	'''
-	Arguments
-		dataset:
-		image_dir:
-		ishape:
-		abox_2dtensors:
-		iou_thresholds:
-		total_examples:
-		total_classes:
-		anchor_samplings
-	Return 
-		tensor: (h*w*k, 1+4)
 	'''
 
+	total_examples += 100 # Guess 100 no_match_anchors
 	total_patches 								= total_examples//2
 	total_patches_w_augcolor 					= total_examples//4
 	total_nests 								= total_examples//8
@@ -792,7 +782,50 @@ def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 	modes = np.concatenate([np.zeros(total_patches), np.ones(total_nests), 2*np.ones(total_patches_w_augcolor), 3*np.ones(total_nests_w_augcolor)], axis=-1)
 	np.random.shuffle(modes)
 	
-	for i in range(total_examples+100):
+	for i in range(total_examples): 
+		four_images = []
+		four_bboxes = []
+		
+		for _ in range(4):
+			image_id, bboxes = dataset[randint(0, len(dataset)-1)]
+			image = io.imread(image_dir + '/' + image_id + '.jpg')
+			four_images.append(image)
+			four_bboxes.append(bboxes)
+
+		image, bboxes = create_image_with_boxes(images=four_images, anno=four_bboxes, ishape=ishape, mode=modes[i])
+
+		for i in range(len(bboxes)):
+			bboxes[i] = bboxes[i][:4]+[0]
+
+		clz_2dtensor, loc_2dtensor, no_match_anchors, _ = gentiery(
+			bboxes=bboxes, 
+			abox_2dtensor=abox_2dtensor, 
+			iou_thresholds=iou_thresholds, 
+			total_classes=total_classes, 
+			anchor_sampling=anchor_sampling)
+
+		if no_match_anchors:
+			print('!', end='')
+			continue
+
+		batchy_2dtensor = tf.concat(values=[clz_2dtensor, loc_2dtensor], axis=-1) # (h*w*k, total_classes+1+4)
+		batchx_4dtensor = tf.constant(value=[image], dtype='float32')
+
+		yield batchx_4dtensor, batchy_2dtensor, bboxes
+
+def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_sampling):
+	'''
+	'''
+
+	total_examples += 100 # Guess 100 no_match_anchors
+	total_patches 								= total_examples//2
+	total_patches_w_augcolor 					= total_examples//4
+	total_nests 								= total_examples//8
+	total_nests_w_augcolor 						= total_examples - (total_patches+total_patches_w_augcolor+total_nests)
+	modes = np.concatenate([np.zeros(total_patches), np.ones(total_nests), 2*np.ones(total_patches_w_augcolor), 3*np.ones(total_nests_w_augcolor)], axis=-1)
+	np.random.shuffle(modes)
+	
+	for i in range(total_examples):
 		four_images = []
 		four_bboxes = []
 		
@@ -812,25 +845,25 @@ def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 			abox_2dtensor=abox_2dtensors[0], 
 			iou_thresholds=iou_thresholds[0], 
 			total_classes=total_classes, 
-			anchor_sampling=anchor_samplings[0])
+			anchor_sampling=anchor_sampling[0])
 		tire2_clz_2dtensor, tire2_loc_2dtensor, no_match_anchors2, _ = gentiery(
 			bboxes=bboxes, 
 			abox_2dtensor=abox_2dtensors[1], 
 			iou_thresholds=iou_thresholds[1], 
 			total_classes=total_classes, 
-			anchor_sampling=anchor_samplings[1])
+			anchor_sampling=anchor_sampling[1])
 		tire3_clz_2dtensor, tire3_loc_2dtensor, no_match_anchors3, _ = gentiery(
 			bboxes=bboxes, 
 			abox_2dtensor=abox_2dtensors[2], 
 			iou_thresholds=iou_thresholds[2], 
 			total_classes=total_classes, 
-			anchor_sampling=anchor_samplings[2])
+			anchor_sampling=anchor_sampling[2])
 		tire4_clz_2dtensor, tire4_loc_2dtensor, no_match_anchors4, _ = gentiery(
 			bboxes=bboxes, 
 			abox_2dtensor=abox_2dtensors[3], 
 			iou_thresholds=iou_thresholds[3], 
 			total_classes=total_classes, 
-			anchor_sampling=anchor_samplings[3])
+			anchor_sampling=anchor_sampling[3])
 
 		if no_match_anchors1 is True and no_match_anchors2 is True and no_match_anchors3 is True and no_match_anchors4 is True:
 			print('!', end='')
@@ -860,12 +893,12 @@ def get_dataset_info(dataset_name):
 	'''
 
 	dataset_info_list = {
-		'mnist_digits': {
+		'mnist-digits': {
 			'total_classes': 10,
-			'train_anno_file_path': 'mnist_digits/train.txt',
-			'train_image_dir_path': 'mnist_digits/train',
-			'test_anno_file_path': 'mnist_digits/test.txt',
-			'test_image_dir_path': 'mnist_digits/test',
+			'train_anno_file_path': 'mnist-digits/train.txt',
+			'train_image_dir_path': 'mnist-digits/train',
+			'test_anno_file_path': 'mnist-digits/test.txt',
+			'test_image_dir_path': 'mnist-digits/test',
 		},
 		'face1024': {
 			'total_classes': 1,
