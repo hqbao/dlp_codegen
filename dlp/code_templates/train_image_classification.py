@@ -11,6 +11,9 @@ def train(dataset_name, image_shape, epochs, total_train_examples, batch_size):
 	model = build_model()
 	model.summary()
 
+	if not os.path.exists(output_path):
+		os.makedirs(output_path)
+		
 	weight_file_path = output_path+'/weights_'+dataset_name+'.h5'
 	if os.path.isdir(weight_file_path):
 		model.load_weights(weight_file_path, by_name=True)
