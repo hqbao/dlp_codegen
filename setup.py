@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
     name='dlp',
     packages=['dlp'],
-    version='1.0.13',
+    version='1.0.14',
     license='MIT', # Chose a license from here: https://help.github.com/articles/licensing-a-repository
     description='Code generator',
     author='BAO',
@@ -16,6 +16,7 @@ setup(
         'scikit-image',
         'scipy',
         'kaggle',
+        'requests',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha', # "3 - Alpha", "4 - Beta" or "5 - Production/Stable"

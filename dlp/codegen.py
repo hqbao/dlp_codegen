@@ -180,6 +180,7 @@ def gen_execute_part(datagen_node, code_lines):
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', epochs='+str(datagen_node['params']['epochs'])+
 			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
+			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
 			', batch_size='+str(datagen_node['params']['batch_size'])+
 			')');
 		code_lines.append('');
@@ -188,11 +189,12 @@ def gen_execute_part(datagen_node, code_lines):
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', epochs='+str(datagen_node['params']['epochs'])+
 			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
+			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
 			', batch_size='+str(datagen_node['params']['batch_size'])+
 			')');
 		code_lines.append('');
 
-def generate(json_model_file, output_path):
+def generate(json_model_file, output_path, id, token):
 	nodes, connection = read_json_model(file=json_model_file)
 	datagen_node, datagen_vertex = get_datagen_node(nodes=nodes)
 	input_node, input_vertex = get_input_node(nodes=nodes)
@@ -212,8 +214,13 @@ def generate(json_model_file, output_path):
 	code_lines.append('os.system(\'pip install dlp\')')
 	code_lines.append('import tensorflow as tf')
 	code_lines.append('import numpy as np')
+	code_lines.append('import json')
 	code_lines.append('import dlp.blocks as blocks')
 	code_lines.append('import dlp.utils as utils')
+	code_lines.append('import dlp.restapi as restapi')
+	code_lines.append('')
+	code_lines.append('token = \''+token+'\'')
+	code_lines.append('id = \''+id+'\'')
 	code_lines.append('')
 
 	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)

@@ -192,23 +192,91 @@ def loc2box2d(box_2dtensor, bbe_2dtensor):
 
 	return t
 
-def nsm(abox_2dtensor, prediction, nsm_iou_threshold, nsm_score_threshold, nsm_max_output_size, total_classes):
+def match_ic(prediction, batchy_2dtensor):
+	'''
+	Arguments
+		prediction: (batch_size, total_classes)
+		batchy_2dtensor: (batch_size, total_classes)
+	Return
+		tensor
+	'''
+
+	pred_y = tf.argmax(input=prediction, axis=-1)
+	true_y = tf.argmax(input=batchy_2dtensor, axis=-1)
+	tp = tf.where(
+		condition=tf.math.logical_and(
+			x=tf.math.equal(x=pred_y, y=1),
+			y=tf.math.equal(x=pred_y, y=true_y)), 
+		x=1, 
+		y=0)
+	fp = tf.where(
+		condition=tf.math.logical_and(
+			x=tf.math.equal(x=pred_y, y=1),
+			y=tf.math.not_equal(x=pred_y, y=true_y)), 
+		x=1, 
+		y=0)
+	fn = tf.where(
+		condition=tf.math.logical_and(
+			x=tf.math.equal(x=pred_y, y=0),
+			y=tf.math.not_equal(x=pred_y, y=true_y)), 
+		x=1, 
+		y=0)
+	tp = tf.math.reduce_sum(input_tensor=tp, axis=-1)
+	fp = tf.math.reduce_sum(input_tensor=fp, axis=-1)
+	fn = tf.math.reduce_sum(input_tensor=fn, axis=-1)
+	
+	return tp, fp, fn
+
+def match_od(boxes, pboxes, iou_threshold=0.5):
 	'''
 	'''
 
-	loc_2dtensor = prediction[:, total_classes+1:] # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4, 4)
-	pbox_2dtensor = loc2box2d(box_2dtensor=abox_2dtensor, bbe_2dtensor=loc_2dtensor) # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4, 4)
+	tp1 = 0
+	tp2 = 0
+	fn = 0
+	fp = 0
+	
+	for i in range(len(boxes)):
+		intersected = 0
+		for j in range(len(pboxes)):
+			iou = comiou(bbox=boxes[i], pred_bbox=pboxes[j])
+			if iou >= iou_threshold:
+				intersected = 1
+				break
 
-	clz_2dtensor = prediction[:, :total_classes+1] # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4, total_classes+1)
-	clz_1dtensor = tf.math.argmax(input=clz_2dtensor, axis=-1) # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4,)
+		tp1 += intersected
+		fn += int(not intersected)
+
+	for i in range(len(pboxes)):
+		intersected = 0
+		for j in range(len(boxes)):
+			iou = comiou(bbox=boxes[j], pred_bbox=pboxes[i])
+			if iou >= iou_threshold:
+				intersected = 1
+				break
+
+		tp2 += intersected
+		fp += int(not intersected)
+
+	return min(tp1, tp2), fp, fn
+
+def nms(abox_2dtensor, prediction, nsm_iou_threshold, nsm_score_threshold, nsm_max_output_size, total_classes):
+	'''
+	'''
+
+	loc_2dtensor = prediction[:, total_classes+1:] # (h*w*k, 4)
+	pbox_2dtensor = loc2box2d(box_2dtensor=abox_2dtensor, bbe_2dtensor=loc_2dtensor) # (h*w*k, 4)
+
+	clz_2dtensor = prediction[:, :total_classes+1] # (h*w*k, total_classes+1)
+	clz_1dtensor = tf.math.argmax(input=clz_2dtensor, axis=-1) # (h*w*k,)
 
 	cancel = tf.where(
 		condition=tf.math.less(x=clz_1dtensor, y=total_classes),
 		x=1.0,
-		y=0.0) # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4,)
+		y=0.0) # (h*w*k,)
 
-	score_1dtensor = tf.math.reduce_max(input_tensor=clz_2dtensor, axis=-1) # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4,)
-	score_1dtensor *= cancel # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4,)
+	score_1dtensor = tf.math.reduce_max(input_tensor=clz_2dtensor, axis=-1) # (h*w*k,)
+	score_1dtensor *= cancel # (h*w*k,)
 
 	selected_indices, valid_outputs = tf.image.non_max_suppression_padded(
 		boxes=pbox_2dtensor,
@@ -228,7 +296,7 @@ def nsm(abox_2dtensor, prediction, nsm_iou_threshold, nsm_score_threshold, nsm_m
 
 	return boxclz_2dtensor, valid_outputs
 
-def match(boxes, pboxes, areas=[45**2, 91**2, 181**2, 362**2, 724**2], iou_threshold=0.5):
+def match_od4(boxes, pboxes, areas=[45**2, 91**2, 181**2, 362**2, 724**2], iou_threshold=0.5):
 	'''
 	'''
 
@@ -902,7 +970,8 @@ def get_dataset_info(dataset_name):
 		},
 		'face1024': {
 			'total_classes': 1,
-			'total_train_examples': 4,
+			'total_train_examples': 10,
+			'total_test_examples': 2,
 			'train_anno_file_path': 'face1024/train1024.txt',
 			'train_image_dir_path': 'face1024/train1024',
 			'test_anno_file_path': 'face1024/test1024.txt',
