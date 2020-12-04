@@ -123,5 +123,5 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 				"falseNegative": false_negative.tolist(),
 			})
 		}
-		msg_code, msg_resp = restapi.patch(url='https://ai-designer.io/aimodel/update?id='+id, query={}, body=body, token=token)
+		msg_code, msg_resp = restapi.patch(url='https://ai-designer.io/api/aimodel/update?id='+id, query={}, body=body, token=token)
 		assert msg_code == 1000, msg_resp

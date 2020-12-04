@@ -85,5 +85,5 @@ def train(dataset_name, image_shape, epochs, total_train_examples, total_test_ex
 				# "testLoss": test_loss.tolist(),
 			})
 		}
-		msg_code, msg_resp = restapi.patch(url='https://ai-designer.io/aimodel/update?id='+id, query={}, body=body, token=token)
+		msg_code, msg_resp = restapi.patch(url='https://ai-designer.io/api/aimodel/update?id='+id, query={}, body=body, token=token)
 		assert msg_code == 1000, msg_resp
