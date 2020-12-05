@@ -107,21 +107,16 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 
 		print('\nLoss: {:.3f}'.format(float(np.mean(test_loss[epoch], axis=-1))))
 
-		files = {'file': (weights_file_name, open(weight_file_path, 'rb'))}
-		msg_code, msg_resp = restapi.post_file(url='https://ai-designer.io/upload/weights', query={}, files=files, data={}, token=None)
-		assert msg_code == 1000, msg_resp
-
-		body = {
-			"weights": msg_resp['url'],
-			"trainResult": json.dumps({
-				"trainLoss": train_loss.tolist(),
-				"testLoss": test_loss.tolist(),
-				"totalBboxes": total_bboxes.tolist(),
-				"totalPboxes": total_pboxes.tolist(),
-				"truePositive": true_positive.tolist(),
-				"falsePositive": false_positive.tolist(),
-				"falseNegative": false_negative.tolist(),
-			})
-		}
-		msg_code, msg_resp = restapi.patch(url='https://ai-designer.io/api/aimodel/update?id='+id, query={}, body=body, token=token)
-		assert msg_code == 1000, msg_resp
+		restapi.update_train_result(
+			encoded_token=encoded_token,
+			weight_file_path=weight_file_path, 
+			weights_file_name=weights_file_name, 
+			train_result=json.dumps({
+				"trainLoss": train_loss[:epoch+1].tolist(),
+				"testLoss": test_loss[:epoch+1].tolist(),
+				"totalBboxes": total_bboxes[:epoch+1].tolist(),
+				"totalPboxes": total_pboxes[:epoch+1].tolist(),
+				"truePositive": true_positive[:epoch+1].tolist(),
+				"falsePositive": false_positive[:epoch+1].tolist(),
+				"falseNegative": false_negative[:epoch+1].tolist(),
+			}))

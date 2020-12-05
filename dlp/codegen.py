@@ -194,7 +194,7 @@ def gen_execute_part(datagen_node, code_lines):
 			')');
 		code_lines.append('');
 
-def generate(json_model_file, output_path, id, token):
+def generate(json_model_file, output_path, encoded_token):
 	nodes, connection = read_json_model(file=json_model_file)
 	datagen_node, datagen_vertex = get_datagen_node(nodes=nodes)
 	input_node, input_vertex = get_input_node(nodes=nodes)
@@ -219,8 +219,7 @@ def generate(json_model_file, output_path, id, token):
 	code_lines.append('import dlp.utils as utils')
 	code_lines.append('import dlp.restapi as restapi')
 	code_lines.append('')
-	code_lines.append('token = \''+token+'\'')
-	code_lines.append('id = \''+id+'\'')
+	code_lines.append('encoded_token = \''+encoded_token+'\'')
 	code_lines.append('')
 
 	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)

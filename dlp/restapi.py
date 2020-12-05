@@ -73,3 +73,20 @@ def delete(url, query, token):
 	except Exception as e:
 		return 2001, res.status_code
 
+def update_train_result(encoded_token, weight_file_path, weights_file_name, train_result):
+	token = json.loads(encoded_token)
+	id = token['id']
+	jwt_token = token['jwtToken']
+
+	files = {'file': (weights_file_name, open(weight_file_path, 'rb'))}
+	msg_code, msg_resp = post_file(url='https://ai-designer.io/upload/weights', query={}, files=files, data={}, token=None)
+	if msg_code != 1000:
+		print(msg_resp)
+
+	body = {
+		'weights': msg_resp['url'],
+		'trainResult': train_result,
+	}
+	msg_code, msg_resp = patch(url='https://ai-designer.io/api/aimodel/update?id='+id, query={}, body=body, token=jwt_token)
+	if msg_code != 1000:
+		print(msg_resp)
