@@ -11,8 +11,8 @@ def read_json_model(file):
 	connection = graph['connection']
 	return nodes, connection
 
-def write_codegen(code_lines, output_path):
-	file = open(output_path+'/play.py', 'w')
+def write_codegen(code_lines, output_file_path):
+	file = open(output_file_path, 'w')
 	for code_line in code_lines:
 		file.write(code_line+'\n')
 
@@ -155,9 +155,16 @@ def gen_train_part(datagen_node, code_lines):
 
 	code_lines.append('');
 
-def gen_execute_part(datagen_node, code_lines):
-	train_procedure = datagen_node['params']['train_procedure'].lower()
-	if train_procedure == 'object_detection':
+	if train_procedure == 'image_classification':
+		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
+			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
+			', epochs='+str(datagen_node['params']['epochs'])+
+			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
+			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
+			', batch_size='+str(datagen_node['params']['batch_size'])+
+			')');
+		code_lines.append('')
+	elif train_procedure == 'object_detection':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
@@ -165,7 +172,7 @@ def gen_execute_part(datagen_node, code_lines):
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
-		code_lines.append('');
+		code_lines.append('')
 	elif train_procedure == 'object_detection_4tiers':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
@@ -174,16 +181,7 @@ def gen_execute_part(datagen_node, code_lines):
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
-		code_lines.append('');
-	elif train_procedure == 'image_classification':
-		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
-			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
-			', epochs='+str(datagen_node['params']['epochs'])+
-			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
-			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
-			', batch_size='+str(datagen_node['params']['batch_size'])+
-			')');
-		code_lines.append('');
+		code_lines.append('')
 	elif train_procedure == 'heatmap_regression':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
@@ -192,9 +190,40 @@ def gen_execute_part(datagen_node, code_lines):
 			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
 			', batch_size='+str(datagen_node['params']['batch_size'])+
 			')');
-		code_lines.append('');
+		code_lines.append('')
 
-def generate(json_model_file, output_path, encoded_token):
+def gen_convert_part(datagen_node, code_lines, settings):
+	train_procedure = datagen_node['params']['train_procedure'].lower()
+	file = open(pkg_resources.resource_filename(__name__, 'code_templates/convert_'+train_procedure+'.py'), 'r')
+	lines = file.readlines()
+	for i in range(len(lines)):
+		code_line = lines[i][:-1]
+		code_lines.append(code_line);
+
+	code_lines.append('');
+
+	if train_procedure == 'image_classification':
+		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
+			'\', output_path=\''+settings['output_path']+'\''+
+			')');
+		code_lines.append('')
+	elif train_procedure == 'object_detection':
+		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
+			'\', output_path=\''+settings['output_path']+'\''+
+			')');
+		code_lines.append('')
+	elif train_procedure == 'object_detection_4tiers':
+		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
+			'\', output_path=\''+settings['output_path']+'\''+
+			')');
+		code_lines.append('')
+	elif train_procedure == 'heatmap_regression':
+		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
+			'\', output_path=\''+settings['output_path']+'\''+
+			')');
+		code_lines.append('')
+
+def generate_code_for_train(json_model_file, output_path, encoded_token):
 	nodes, connection = read_json_model(file=json_model_file)
 	datagen_node, datagen_vertex = get_datagen_node(nodes=nodes)
 	input_node, input_vertex = get_input_node(nodes=nodes)
@@ -224,7 +253,38 @@ def generate(json_model_file, output_path, encoded_token):
 
 	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)
 	gen_train_part(datagen_node=datagen_node, code_lines=code_lines)
-	gen_execute_part(datagen_node=datagen_node, code_lines=code_lines)
 
 	# Write to file
-	write_codegen(code_lines=code_lines, output_path=output_path)
+	write_codegen(code_lines=code_lines, output_file_path=output_path+'/train.py')
+
+def generate_code_for_convert(json_model_file, output_path, jSettings):
+	nodes, connection = read_json_model(file=json_model_file)
+	datagen_node, datagen_vertex = get_datagen_node(nodes=nodes)
+	input_node, input_vertex = get_input_node(nodes=nodes)
+
+	serialisation = []
+	conn2d = np.array(connection)
+	traverse(
+		nodes=nodes,
+		serialisation=serialisation, 
+		conn2d=conn2d, 
+		prev_vertex=None, 
+		vertex=input_vertex)
+
+	code_lines = []
+
+	code_lines.append('import os')
+	code_lines.append('os.system(\'pip install dlp\')')
+	code_lines.append('import tensorflow as tf')
+	code_lines.append('import numpy as np')
+	code_lines.append('import json')
+	code_lines.append('import dlp.blocks as blocks')
+	code_lines.append('import dlp.utils as utils')
+	code_lines.append('import dlp.restapi as restapi')
+	code_lines.append('')
+
+	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)
+	gen_convert_part(datagen_node=datagen_node, code_lines=code_lines, settings=json.loads(jSettings))
+
+	# Write to file
+	write_codegen(code_lines=code_lines, output_file_path=output_path+'/convert.py')
