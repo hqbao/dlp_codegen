@@ -271,9 +271,9 @@ def nms(abox_2dtensor, prediction, nsm_iou_threshold, nsm_score_threshold, nsm_m
 	clz_1dtensor = tf.math.argmax(input=clz_2dtensor, axis=-1) # (h*w*k,)
 
 	cancel = tf.where(
-		condition=tf.math.less(x=clz_1dtensor, y=total_classes),
-		x=1.0,
-		y=0.0) # (h*w*k,)
+		condition=tf.math.less(x=clz_1dtensor, y=total_classes*tf.ones(shape=abox_2dtensor.shape[0], dtype='int64')),
+		x=tf.ones(shape=abox_2dtensor.shape[0]),
+		y=tf.zeros(shape=abox_2dtensor.shape[0])) # (h*w*k,)
 
 	score_1dtensor = tf.math.reduce_max(input_tensor=clz_2dtensor, axis=-1) # (h*w*k,)
 	score_1dtensor *= cancel # (h*w*k,)
