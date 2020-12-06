@@ -192,7 +192,7 @@ def gen_train_part(datagen_node, code_lines):
 			')');
 		code_lines.append('')
 
-def gen_convert_part(datagen_node, code_lines, settings):
+def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, settings):
 	train_procedure = datagen_node['params']['train_procedure'].lower()
 	file = open(pkg_resources.resource_filename(__name__, 'code_templates/convert_'+train_procedure+'.py'), 'r')
 	lines = file.readlines()
@@ -203,23 +203,23 @@ def gen_convert_part(datagen_node, code_lines, settings):
 	code_lines.append('');
 
 	if train_procedure == 'image_classification':
-		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
-			'\', output_path=\''+settings['output_path']+'\''+
+		code_lines.append('convert(weights_file_path=\''+weights_file_path+
+			'\', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'object_detection':
-		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
-			'\', output_path=\''+settings['output_path']+'\''+
+		code_lines.append('convert(weights_file_path=\''+weights_file_path+
+			'\', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'object_detection_4tiers':
-		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
-			'\', output_path=\''+settings['output_path']+'\''+
+		code_lines.append('convert(weights_file_path=\''+weights_file_path+
+			'\', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'heatmap_regression':
-		code_lines.append('convert(weights_file_path=\''+settings['weights_file_path']+
-			'\', output_path=\''+settings['output_path']+'\''+
+		code_lines.append('convert(weights_file_path=\''+weights_file_path+
+			'\', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
 
@@ -257,7 +257,7 @@ def generate_code_for_train(json_model_file, output_path, encoded_token):
 	# Write to file
 	write_codegen(code_lines=code_lines, output_file_path=output_path+'/train.py')
 
-def generate_code_for_convert(json_model_file, output_path, jSettings):
+def generate_code_for_convert(json_model_file, output_path, weights_file_path, jSettings):
 	nodes, connection = read_json_model(file=json_model_file)
 	datagen_node, datagen_vertex = get_datagen_node(nodes=nodes)
 	input_node, input_vertex = get_input_node(nodes=nodes)
@@ -284,7 +284,7 @@ def generate_code_for_convert(json_model_file, output_path, jSettings):
 	code_lines.append('')
 
 	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)
-	gen_convert_part(datagen_node=datagen_node, code_lines=code_lines, settings=json.loads(jSettings))
+	gen_convert_part(datagen_node=datagen_node, code_lines=code_lines, weights_file_path=weights_file_path, output_path=output_path, settings=json.loads(jSettings))
 
 	# Write to file
 	write_codegen(code_lines=code_lines, output_file_path=output_path+'/convert.py')
