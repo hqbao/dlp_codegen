@@ -970,8 +970,8 @@ def get_dataset_info(dataset_name):
 		},
 		'face1024': {
 			'total_classes': 1,
-			'total_train_examples': 10,
-			'total_test_examples': 2,
+			'total_train_examples': 500, # 976
+			'total_test_examples': 100, # 226
 			'train_anno_file_path': 'face1024/train1024.txt',
 			'train_image_dir_path': 'face1024/train1024',
 			'test_anno_file_path': 'face1024/test1024.txt',
