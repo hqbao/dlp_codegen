@@ -19,7 +19,7 @@ def train(dataset_name, image_shape, epochs, total_train_examples, total_test_ex
 		
 	weights_file_name = 'weights_'+dataset_name+'.h5'
 	weight_file_path = output_path+'/'+weights_file_name
-	if os.path.isdir(weight_file_path):
+	if os.path.isfile(weight_file_path):
 		model.load_weights(weight_file_path, by_name=True)
 
 	train_dataset = utils.load_image_classification_dataset(anno_file_path=train_anno_file_path)

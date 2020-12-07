@@ -69,7 +69,7 @@ def traverse(nodes, serialisation, conn2d, prev_vertex, vertex):
 				vertex=next_vertex)
 			conn2d[vertex, next_vertex] = 0
 
-def gen_model_part(serialisation, current_code_lines):
+def gen_model_part(serialisation, current_code_lines, training=True):
 	input_tensor_name = None
 	output_tensor_name = None
 	loss_func_name = None
@@ -119,6 +119,9 @@ def gen_model_part(serialisation, current_code_lines):
 
 				if type(value) is int or type(value) is float:
 					value = str(value)
+
+				if training is False and param in ['trainable', 'bn_trainable']:
+					value = '0'
 
 				func_input += ', '+param+'='+value
 
@@ -283,7 +286,7 @@ def generate_code_for_convert(json_model_file, output_path, weights_file_path, j
 	code_lines.append('import dlp.restapi as restapi')
 	code_lines.append('')
 
-	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)
+	gen_model_part(serialisation=serialisation, current_code_lines=code_lines, training=False)
 	gen_convert_part(datagen_node=datagen_node, code_lines=code_lines, weights_file_path=weights_file_path, output_path=output_path, settings=json.loads(jSettings))
 
 	# Write to file
