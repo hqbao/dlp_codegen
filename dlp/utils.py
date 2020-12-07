@@ -9,6 +9,7 @@ import numpy as np
 import json
 import os
 import zipfile
+import copy
 from skimage import io, transform
 from random import randint
 from scipy.stats import multivariate_normal
@@ -844,8 +845,8 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 
 	total_examples += 100 # Guess 100 no_match_anchors
 	for i in range(total_examples):
-		# image_id, bboxes = dataset[np.random.randint(0, len(dataset)-1)]
-		image_id, bboxes = dataset[i]
+		image_id, bboxes = dataset[np.random.randint(0, len(dataset)-1)]
+		bboxes = copy.deepcopy(bboxes)
 		image = io.imread(image_dir + '/' + image_id + '.jpg')
 
 		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
@@ -893,12 +894,13 @@ def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 	modes = np.concatenate([np.zeros(total_patches), np.ones(total_nests), 2*np.ones(total_patches_w_augcolor), 3*np.ones(total_nests_w_augcolor)], axis=-1)
 	np.random.shuffle(modes)
 	
-	for i in range(total_examples):
+	for _ in range(total_examples):
 		four_images = []
 		four_bboxes = []
 		
 		for _ in range(4):
 			image_id, bboxes = dataset[randint(0, len(dataset)-1)]
+			bboxes = copy.deepcopy(bboxes)
 			image = io.imread(image_dir + '/' + image_id + '.jpg')
 			four_images.append(image)
 			four_bboxes.append(bboxes)
