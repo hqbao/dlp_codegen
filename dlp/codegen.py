@@ -30,7 +30,7 @@ def get_datagen_node(nodes):
 			datagen_node = node
 			datagen_vertex = i
 			break
-		elif blockType == 'OBJECT_DETECTION_4TIERS_DATAGEN':
+		elif blockType == 'OBJECT_DETECTION_DATAGEN':
 			datagen_node = node
 			datagen_vertex = i
 			break
