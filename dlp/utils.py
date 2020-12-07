@@ -843,24 +843,23 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 	'''
 
 	total_examples += 100 # Guess 100 no_match_anchors
-	total_patches 								= total_examples//2
-	total_patches_w_augcolor 					= total_examples//4
-	total_nests 								= total_examples//8
-	total_nests_w_augcolor 						= total_examples - (total_patches+total_patches_w_augcolor+total_nests)
-	modes = np.concatenate([np.zeros(total_patches), np.ones(total_nests), 2*np.ones(total_patches_w_augcolor), 3*np.ones(total_nests_w_augcolor)], axis=-1)
-	np.random.shuffle(modes)
-	
-	for i in range(total_examples): 
-		four_images = []
-		four_bboxes = []
-		
-		for _ in range(4):
-			image_id, bboxes = dataset[randint(0, len(dataset)-1)]
-			image = io.imread(image_dir + '/' + image_id + '.jpg')
-			four_images.append(image)
-			four_bboxes.append(bboxes)
+	for i in range(total_examples):
+		image_id, bboxes = dataset[randint(0, len(dataset)-1)]
+		image = io.imread(image_dir + '/' + image_id + '.jpg')
 
-		image, bboxes = create_image_with_boxes(images=four_images, anno=four_bboxes, ishape=ishape, mode=modes[i])
+		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
+		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+		image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=randint(0, 2))
+
+		if randint(0, 1) == 0:
+			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+
+		if randint(0, 1) == 1:
+			image = augcolor(image=image, ishape=ishape)
+
+		if randint(0, 1) == 1:
+			image = np.mean(image, axis=-1, keepdims=True)
+			image = np.concatenate([image, image, image], axis=-1)
 
 		for i in range(len(bboxes)):
 			bboxes[i] = bboxes[i][:4]+[0]
