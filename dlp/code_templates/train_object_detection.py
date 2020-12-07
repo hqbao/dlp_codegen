@@ -5,13 +5,13 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 	train_image_dir_path = dataset_info['train_image_dir_path']
 	test_anno_file_path = dataset_info['test_anno_file_path']
 	test_image_dir_path = dataset_info['test_image_dir_path']
+	total_train_examples = dataset_info['total_train_examples']
+	total_test_examples = dataset_info['total_test_examples']
+	total_classes = dataset_info['total_classes']
 	ishape = image_shape
 	ssize = scale_sizes
 	asizes = anchor_sizes
-	total_classes = dataset_info['total_classes']
 	total_epoches = epochs
-	total_train_examples = dataset_info['total_train_examples']
-	total_test_examples = dataset_info['total_test_examples']
 
 	abox_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssize, asizes=asizes), dtype='float32') # (h*w*k, 4)
 
@@ -38,6 +38,7 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 	false_negative = np.zeros((total_epoches, total_test_examples))
 
 	for epoch in range(total_epoches):
+		np.random.shuffle(train_dataset)
 		gen = utils.genxy_od(
 			dataset=train_dataset, 
 			image_dir=train_image_dir_path, 

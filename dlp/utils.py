@@ -844,7 +844,8 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 
 	total_examples += 100 # Guess 100 no_match_anchors
 	for i in range(total_examples):
-		image_id, bboxes = dataset[randint(0, len(dataset)-1)]
+		# image_id, bboxes = dataset[np.random.randint(0, len(dataset)-1)]
+		image_id, bboxes = dataset[i]
 		image = io.imread(image_dir + '/' + image_id + '.jpg')
 
 		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
@@ -872,7 +873,7 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 			anchor_sampling=anchor_sampling)
 
 		if no_match_anchors:
-			print('!', end='')
+			print(image_id, end='')
 			continue
 
 		batchy_2dtensor = tf.concat(values=[clz_2dtensor, loc_2dtensor], axis=-1) # (h*w*k, total_classes+1+4)
