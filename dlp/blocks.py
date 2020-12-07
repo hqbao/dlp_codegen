@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 def INPUT_LAYER(input_tensor, batch_size, dtype, input_shape):
-	return tf.keras.layers.Input(batch_size=batch_size, shape=input_shape, dtype=dtype)
+	return tf.keras.layers.Input(shape=input_shape, dtype=dtype)
 
 def CONV2D_LAYER(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, name):
 	use_bias = True if use_bias == 1 else False
