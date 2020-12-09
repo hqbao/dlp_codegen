@@ -163,23 +163,26 @@ def LOSS_FUNC_OD4(input_tensor, name, total_classes, lamda=1.0):
 
 	return ssd_loss
 
-def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, bn_trainable, activation, name):
+def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, bn_trainable, activation, name, repeat):
 	use_bias = True if use_bias == 1 else False
 	trainable = True if trainable == 1 else False
 	bn_trainable = True if bn_trainable == 1 else False
 	block_name = name
 
-	tensor = tf.keras.layers.Conv2D(
-		filters=filters, 
-		kernel_size=kernel_size, 
-		strides=strides,
-		padding=padding, 
-		use_bias=use_bias,
-		trainable=trainable, 
-		name=block_name+'_conv',
-		kernel_regularizer=tf.keras.regularizers.l2(0.0))(input_tensor)
-	tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_bn')(tensor)
-	tensor = tf.keras.layers.Activation(activation)(tensor)
+	tensor = input_tensor
+	for i in range(repeat):
+		tensor = tf.keras.layers.Conv2D(
+			filters=filters, 
+			kernel_size=kernel_size, 
+			strides=strides,
+			padding=padding, 
+			use_bias=use_bias,
+			trainable=trainable, 
+			name=block_name+'_'+str(i)+'_conv',
+			kernel_regularizer=tf.keras.regularizers.l2(0.0))(tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_'+str(i)+'_bn')(tensor)
+		tensor = tf.keras.layers.Activation(activation)(tensor)
+
 	return tensor
 
 def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable, repeat):
