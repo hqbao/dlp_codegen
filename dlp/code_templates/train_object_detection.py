@@ -31,8 +31,6 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 
 	train_loss = np.zeros((total_epoches, total_train_examples))
 	test_loss = np.zeros((total_epoches, total_test_examples))
-	total_bboxes = np.zeros((total_epoches, total_test_examples))
-	total_pboxes = np.zeros((total_epoches, total_test_examples))
 	true_positive = np.zeros((total_epoches, total_test_examples))
 	false_positive = np.zeros((total_epoches, total_test_examples))
 	false_negative = np.zeros((total_epoches, total_test_examples))
@@ -89,8 +87,6 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 			boxclz_2dtensor = boxclz_2dtensor[:valid_outputs]
 			pboxes = list(boxclz_2dtensor.numpy())
 			tp, fp, fn = utils.match_od(boxes=bboxes, pboxes=pboxes, iou_threshold=0.5)
-			total_bboxes[epoch, batch] = len(bboxes)
-			total_pboxes[epoch, batch] = len(pboxes)
 			true_positive[epoch, batch] = tp
 			false_positive[epoch, batch] = fp
 			false_negative[epoch, batch] = fn
@@ -101,16 +97,15 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 
 		print('\nLoss: {:.3f}'.format(float(np.mean(test_loss[epoch], axis=-1))))
 
-		restapi.update_train_result(
+		updated = restapi.update_train_result(
 			encoded_token=encoded_token,
 			weight_file_path=weight_file_path, 
 			weights_file_name=weights_file_name, 
-			train_result=json.dumps({
-				"trainLoss": train_loss[:epoch+1].tolist(),
-				"testLoss": test_loss[:epoch+1].tolist(),
-				"totalBboxes": total_bboxes[:epoch+1].tolist(),
-				"totalPboxes": total_pboxes[:epoch+1].tolist(),
-				"truePositive": true_positive[:epoch+1].tolist(),
-				"falsePositive": false_positive[:epoch+1].tolist(),
-				"falseNegative": false_negative[:epoch+1].tolist(),
-			}))
+			epoch_train_loss=train_loss[epoch].tolist(),
+			epoch_test_loss=test_loss[epoch].tolist(),
+			epoch_tp=true_positive[epoch].tolist(),
+			epoch_fp=false_positive[epoch].tolist(),
+			epoch_fn=false_negative[epoch].tolist())
+
+		if updated is not True:
+			print('Can not update train result')

@@ -80,14 +80,15 @@ def train(dataset_name, image_shape, epochs, total_train_examples, total_test_ex
 
 		print('\nLoss: {:.3f}'.format(float(np.mean(test_loss[epoch], axis=-1))))
 
-		restapi.update_train_result(
+		updated = restapi.update_train_result(
 			encoded_token=encoded_token,
 			weight_file_path=weight_file_path, 
 			weights_file_name=weights_file_name, 
-			train_result=json.dumps({
-				"trainLoss": train_loss[:epoch+1].tolist(),
-				"testLoss": test_loss[:epoch+1].tolist(),
-				"truePositive": true_positive[:epoch+1].tolist(),
-				"falsePositive": false_positive[:epoch+1].tolist(),
-				"falseNegative": false_negative[:epoch+1].tolist(),
-			}))
+			epoch_train_loss=train_loss[epoch].tolist(),
+			epoch_test_loss=test_loss[epoch].tolist(),
+			epoch_tp=true_positive[epoch].tolist(),
+			epoch_fp=false_positive[epoch].tolist(),
+			epoch_fn=false_negative[epoch].tolist())
+
+		if updated is not True:
+			print('Can not update train result')
