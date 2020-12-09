@@ -970,6 +970,13 @@ def get_dataset_info(dataset_name):
 			'test_anno_file_path': 'mnist-digits/test.txt',
 			'test_image_dir_path': 'mnist-digits/test',
 		},
+		'fingers': {
+			'total_classes': 6,
+			'train_anno_file_path': 'fingers/train.txt',
+			'train_image_dir_path': 'fingers/train',
+			'test_anno_file_path': 'fingers/test.txt',
+			'test_image_dir_path': 'fingers/test',
+		},
 		'face1024': {
 			'total_classes': 1,
 			'total_train_examples': 500, # 976
@@ -1054,15 +1061,18 @@ def genxy_ic(dataset, image_dir, ishape, total_classes, total_examples, batch_si
 	total_batches = total_examples//batch_size
 
 	for i in range(total_batches):
-		batchx_3dtensor = np.zeros((batch_size, ishape[0], ishape[1]), dtype='float32')
+		batchx_4dtensor = np.zeros((batch_size, ishape[0], ishape[1], ishape[2]), dtype='float32')
 		batchy_2dtensor = np.zeros((batch_size, total_classes), dtype='float32')
 		for j in range(batch_size):
 			image_file_name, label = dataset[i*batch_size+j]
 			image = io.imread(image_dir+'/'+image_file_name)
-			batchx_3dtensor[j] = image
+			if len(image.shape)==2:
+				image = np.expand_dims(image, axis=2)
+
+			batchx_4dtensor[j] = image
 			batchy_2dtensor[j][int(label)] = 1
 
-		yield batchx_3dtensor, batchy_2dtensor
+		yield batchx_4dtensor, batchy_2dtensor
 
 def fliplr_with_points(image, points, ishape, mode):
 	'''
