@@ -47,7 +47,8 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 			iou_thresholds=iou_thresholds, 
 			total_examples=total_train_examples,
 			total_classes=total_classes, 
-			anchor_sampling=anchor_sampling)
+			anchor_sampling=anchor_sampling,
+			scale_range=[250, 500])
 
 		print('\nTrain epoch {}'.format(epoch))
 		loss = np.zeros(total_train_examples)
@@ -73,7 +74,8 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 			iou_thresholds=iou_thresholds, 
 			total_examples=total_test_examples,
 			total_classes=total_classes, 
-			anchor_sampling=anchor_sampling)
+			anchor_sampling=anchor_sampling,
+			scale_range=[250, 500])
 
 		print('\nTest')
 		for batch in range(total_test_examples):

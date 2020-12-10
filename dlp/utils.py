@@ -882,7 +882,7 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 
 		yield batchx_4dtensor, batchy_2dtensor, bboxes
 
-def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_sampling):
+def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_sampling, scale_range):
 	'''
 	'''
 
@@ -892,7 +892,7 @@ def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 		bboxes = copy.deepcopy(bboxes)
 		image = io.imread(image_dir + '/' + image_id + '.jpg')
 
-		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
+		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
 		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 		image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=randint(0, 2))
 
