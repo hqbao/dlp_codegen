@@ -874,10 +874,63 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 			anchor_sampling=anchor_sampling)
 
 		if no_match_anchors:
-			print(image_id, end='')
+			print('!', end='')
 			continue
 
 		batchy_2dtensor = tf.concat(values=[clz_2dtensor, loc_2dtensor], axis=-1) # (h*w*k, total_classes+1+4)
+		batchx_4dtensor = tf.constant(value=[image], dtype='float32')
+
+		yield batchx_4dtensor, batchy_2dtensor, bboxes
+
+def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_sampling):
+	'''
+	'''
+
+	total_examples += 100 # Guess 100 no_match_anchors
+	for i in range(total_examples):
+		image_id, bboxes = dataset[np.random.randint(0, len(dataset)-1)]
+		bboxes = copy.deepcopy(bboxes)
+		image = io.imread(image_dir + '/' + image_id + '.jpg')
+
+		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
+		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+		image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=randint(0, 2))
+
+		if randint(0, 1) == 0:
+			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+
+		if randint(0, 1) == 1:
+			image = augcolor(image=image, ishape=ishape)
+
+		if randint(0, 1) == 1:
+			image = np.mean(image, axis=-1, keepdims=True)
+			image = np.concatenate([image, image, image], axis=-1)
+
+		for i in range(len(bboxes)):
+			bboxes[i] = bboxes[i][:4]+[0]
+
+		y_tiers = []
+		has_match_anchors = False
+		for i in range(len(abox_2dtensors)):
+			tier_clz_2dtensor, tier_loc_2dtensor, no_match_anchors, _ = gentiery(
+				bboxes=bboxes, 
+				abox_2dtensor=abox_2dtensors[i], 
+				iou_thresholds=iou_thresholds[i], 
+				total_classes=total_classes, 
+				anchor_sampling=anchor_sampling[i])
+
+			if no_match_anchors is True:
+				tier_clz_2dtensor *= 0
+
+			y_tier = tf.concat(values=[tier_clz_2dtensor, tier_loc_2dtensor], axis=-1) # (h*w*k, total_classes+1+4)
+			y_tiers.append(y_tier)
+			has_match_anchors |= not no_match_anchors
+
+		if has_match_anchors is not True:
+			print('!', end='')
+			continue
+
+		batchy_2dtensor = tf.concat(values=y_tiers, axis=0) # (h1*w1*k1 + h2*w2*k2 + ... + hn*wn*kn, total_classes+1+4)
 		batchx_4dtensor = tf.constant(value=[image], dtype='float32')
 
 		yield batchx_4dtensor, batchy_2dtensor, bboxes
