@@ -69,7 +69,7 @@ def traverse(nodes, serialisation, conn2d, prev_vertex, vertex):
 				vertex=next_vertex)
 			conn2d[vertex, next_vertex] = 0
 
-def gen_model_part(serialisation, current_code_lines, training=True):
+def gen_model_part(serialisation, current_code_lines, inference=None):
 	input_tensor_name = None
 	output_tensor_name = None
 	loss_func_name = None
@@ -120,7 +120,7 @@ def gen_model_part(serialisation, current_code_lines, training=True):
 				if type(value) is int or type(value) is float:
 					value = str(value)
 
-				if training is False and param in ['trainable', 'bn_trainable']:
+				if inference is not None and param in ['trainable', 'bn_trainable']:
 					value = '0'
 
 				func_input += ', '+param+'='+value
@@ -139,6 +139,29 @@ def gen_model_part(serialisation, current_code_lines, training=True):
 			code_line = var_name+' = blocks.'+func_name+'('+func_input+')'
 		
 		code_lines.append('\t'+code_line)
+
+	if inference is not None:
+		procedure = inference['procedure']
+		if procedure == 'heatmap_regression':
+			code_lines.append('')
+			code_lines.append('\theatmap_4dtensor = '+output_tensor_name+' - '+input_tensor_name)
+			code_lines.append('\ttensor = heatmap_4dtensor[0] # (h, w, 5), batch_size = 1')
+			code_lines.append('\ttensor = tf.where(condition=tf.math.greater(x=tensor, y=192), x=tensor, y=tensor*0)')
+			code_lines.append('\ttensor = tf.transpose(a=tensor, perm=[2, 0, 1]) # (5, h, w)')
+			code_lines.append('\thm1 = tf.reshape(tensor=tensor[0], shape=[-1])')
+			code_lines.append('\thm2 = tf.reshape(tensor=tensor[1], shape=[-1])')
+			code_lines.append('\thm3 = tf.reshape(tensor=tensor[2], shape=[-1])')
+			code_lines.append('\thm4 = tf.reshape(tensor=tensor[3], shape=[-1])')
+			code_lines.append('\thm5 = tf.reshape(tensor=tensor[4], shape=[-1])')
+			code_lines.append('\ta = tf.math.argmax(input=hm1)')
+			code_lines.append('\tb = tf.math.argmax(input=hm2)')
+			code_lines.append('\tc = tf.math.argmax(input=hm3)')
+			code_lines.append('\td = tf.math.argmax(input=hm4)')
+			code_lines.append('\te = tf.math.argmax(input=hm5)')
+			code_lines.append('\ttensor = [a, b, c, d, e]')
+			code_lines.append('\t'+output_tensor_name+' = tensor')
+			code_lines.append('\t'+loss_func_name+' = None')
+			code_lines.append('')
 
 	# Generate mode code
 	code_lines.append('\tmodel = tf.keras.models.Model(inputs='+input_tensor_name+', outputs='+output_tensor_name+')')
@@ -254,7 +277,7 @@ def generate_code_for_train(json_model_file, output_path, encoded_token):
 	code_lines.append('encoded_token = \''+encoded_token+'\'')
 	code_lines.append('')
 
-	gen_model_part(serialisation=serialisation, current_code_lines=code_lines)
+	gen_model_part(serialisation=serialisation, current_code_lines=code_lines, inference=None)
 	gen_train_part(datagen_node=datagen_node, code_lines=code_lines)
 
 	# Write to file
@@ -286,8 +309,10 @@ def generate_code_for_convert(json_model_file, output_path, weights_file_path, j
 	code_lines.append('import dlp.restapi as restapi')
 	code_lines.append('')
 
-	gen_model_part(serialisation=serialisation, current_code_lines=code_lines, training=False)
-	gen_convert_part(datagen_node=datagen_node, code_lines=code_lines, weights_file_path=weights_file_path, output_path=output_path, settings=json.loads(jSettings))
+	settings = json.loads(jSettings)
+
+	gen_model_part(serialisation=serialisation, current_code_lines=code_lines, inference=settings['inference'])
+	gen_convert_part(datagen_node=datagen_node, code_lines=code_lines, weights_file_path=weights_file_path, output_path=output_path, settings=settings)
 
 	# Write to file
 	write_codegen(code_lines=code_lines, output_file_path=output_path+'/convert.py')
