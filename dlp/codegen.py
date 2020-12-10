@@ -75,7 +75,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 	loss_func_name = None
 	code_lines = []
 
-	code_lines.append('def build_model():')
+	code_lines.append('def build_model(**kwargs):')
 
 	# Add tensor none var
 	code_lines.append('\ttensorNone = None')
@@ -142,6 +142,10 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 
 	if inference is not None:
 		procedure = inference['procedure']
+
+		if procedure == 'image_classification':
+			pass
+
 		if procedure == 'heatmap_regression':
 			code_lines.append('')
 			code_lines.append('\theatmap_4dtensor = '+output_tensor_name+' - '+input_tensor_name)
@@ -160,6 +164,23 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			code_lines.append('\te = tf.math.argmax(input=hm5)')
 			code_lines.append('\ttensor = [a, b, c, d, e]')
 			code_lines.append('\t'+output_tensor_name+' = tensor')
+			code_lines.append('\t'+loss_func_name+' = None')
+			code_lines.append('')
+
+		if procedure == 'object_detection':
+			nsm_iou_threshold = inference['nmsIouThreshold']
+			nsm_score_threshold = inference['nmsScoreThreshold']
+			nsm_max_output_size = inference['nmsMaxOutputSize']
+
+			code_lines.append('')
+			code_lines.append('\tishape = kwargs["image_shape"]')
+			code_lines.append('\tssize = kwargs["scale_sizes"]')
+			code_lines.append('\tasizes = kwargs["anchor_sizes"]')
+			code_lines.append('\ttotal_classes = kwargs["total_classes"]')
+			code_lines.append('\tabox_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssize, asizes=asizes), dtype=\'float32\') # (h*w*k, 4)')
+			code_lines.append('\ttensor, valid_outputs = utils.nms(abox_2dtensor=abox_2dtensor, prediction='+output_tensor_name+', nsm_iou_threshold='+str(nsm_iou_threshold)+', nsm_score_threshold='+str(nsm_score_threshold)+', nsm_max_output_size='+str(nsm_max_output_size)+', total_classes=total_classes)')
+			code_lines.append('\tvalid_outputs = tf.expand_dims(input=valid_outputs, axis=0)')
+			code_lines.append('\t'+output_tensor_name+' = [tensor, valid_outputs]')
 			code_lines.append('\t'+loss_func_name+' = None')
 			code_lines.append('')
 
@@ -184,10 +205,10 @@ def gen_train_part(datagen_node, code_lines):
 	if train_procedure == 'image_classification':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
-			', epochs='+str(datagen_node['params']['epochs'])+
 			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
 			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
 			', batch_size='+str(datagen_node['params']['batch_size'])+
+			', epochs='+str(datagen_node['params']['epochs'])+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'object_detection':
@@ -197,7 +218,8 @@ def gen_train_part(datagen_node, code_lines):
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
-			', epochs='+str(datagen_node['params']['epochs'])+')');
+			', epochs='+str(datagen_node['params']['epochs'])+
+			')');
 		code_lines.append('')
 	elif train_procedure == 'object_detection_4tiers':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
@@ -211,10 +233,10 @@ def gen_train_part(datagen_node, code_lines):
 	elif train_procedure == 'heatmap_regression':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
-			', epochs='+str(datagen_node['params']['epochs'])+
 			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
 			', total_test_examples='+str(datagen_node['params']['total_test_examples'])+
 			', batch_size='+str(datagen_node['params']['batch_size'])+
+			', epochs='+str(datagen_node['params']['epochs'])+
 			')');
 		code_lines.append('')
 
@@ -229,23 +251,33 @@ def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, s
 	code_lines.append('');
 
 	if train_procedure == 'image_classification':
-		code_lines.append('convert(weights_file_path=\''+weights_file_path+
-			'\', output_path=\''+output_path+'\''+
+		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
+			', weights_file_path=\''+weights_file_path+'\''+
+			', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'object_detection':
-		code_lines.append('convert(weights_file_path=\''+weights_file_path+
-			'\', output_path=\''+output_path+'\''+
+		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
+			', weights_file_path=\''+weights_file_path+'\''+
+			', output_path=\''+output_path+'\''+
+			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
+			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
+			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'object_detection_4tiers':
-		code_lines.append('convert(weights_file_path=\''+weights_file_path+
-			'\', output_path=\''+output_path+'\''+
+		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
+			', weights_file_path=\''+weights_file_path+'\''+
+			', output_path=\''+output_path+'\''+
+			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
+			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
+			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			')');
 		code_lines.append('')
 	elif train_procedure == 'heatmap_regression':
-		code_lines.append('convert(weights_file_path=\''+weights_file_path+
-			'\', output_path=\''+output_path+'\''+
+		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
+			', weights_file_path=\''+weights_file_path+'\''+
+			', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
 

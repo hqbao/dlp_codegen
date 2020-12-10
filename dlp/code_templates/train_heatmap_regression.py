@@ -1,4 +1,4 @@
-def train(dataset_name, image_shape, epochs, total_train_examples, total_test_examples, batch_size):
+def train(dataset_name, image_shape, total_train_examples, total_test_examples, batch_size, epochs):
 	dataset_info = utils.get_dataset_info(dataset_name)
 	output_path = './outputs'
 	train_anno_file_path = dataset_info['train_anno_file_path']
