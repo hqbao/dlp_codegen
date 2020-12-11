@@ -13,7 +13,11 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 	asizes = anchor_sizes
 	total_epoches = epochs
 
-	abox_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes, asizes=asizes), dtype='float32') # (h*w*k, 4)
+	a1box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[0], asizes=asizes[0]), dtype='float32') # (h1*w1*k1, 4)
+	a2box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[1], asizes=asizes[1]), dtype='float32') # (h2*w2*k2, 4)
+	a3box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[2], asizes=asizes[2]), dtype='float32') # (h3*w3*k3, 4)
+	abox_2dtensors = [a1box_2dtensor, a2box_2dtensor, a3box_2dtensor]
+	abox_2dtensor = tf.concat(values=abox_2dtensors, axis=0)
 
 	model = build_model()
 	model.summary()
@@ -36,18 +40,20 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 	false_negative = np.zeros((total_epoches, total_test_examples))
 
 	for epoch in range(total_epoches):
-		np.random.shuffle(train_dataset)
-		gen = utils.genxy_od(
+		gen = utils.genxy_mod(
 			dataset=train_dataset, 
 			image_dir=train_image_dir_path, 
 			ishape=ishape, 
-			abox_2dtensor=abox_2dtensor, 
+			abox_2dtensors=abox_2dtensors, 
 			iou_thresholds=iou_thresholds, 
 			total_examples=total_train_examples,
 			total_classes=total_classes, 
-			anchor_sampling=anchor_sampling)
+			anchor_sampling=anchor_sampling,
+			scale_range=[250, 1000])
 
-		print('\nEpoch '+str(epoch)+'\nTrain')
+		print('\nTrain epoch {}'.format(epoch))
+		loss = np.zeros(total_train_examples)
+
 		for batch in range(total_train_examples):
 			batchx_4dtensor, batchy_2dtensor, _ = next(gen)
 			batch_loss = model.train_on_batch(batchx_4dtensor, batchy_2dtensor)
@@ -61,15 +67,16 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 
 		model.save_weights(weight_file_path)
 
-		gen = utils.genxy_od(
+		gen = utils.genxy_mod(
 			dataset=test_dataset, 
 			image_dir=test_image_dir_path, 
 			ishape=ishape, 
-			abox_2dtensor=abox_2dtensor, 
+			abox_2dtensors=abox_2dtensors, 
 			iou_thresholds=iou_thresholds, 
 			total_examples=total_test_examples,
 			total_classes=total_classes, 
-			anchor_sampling=anchor_sampling)
+			anchor_sampling=anchor_sampling,
+			scale_range=[250, 1000])
 
 		print('\nTest')
 		for batch in range(total_test_examples):
