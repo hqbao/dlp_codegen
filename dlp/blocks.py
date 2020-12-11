@@ -457,5 +457,63 @@ def RESNET_SIDENTITY_BLOCK(input_tensor, kernel_size, filters, strides, name, us
 	return tensor
 
 def RFE_BLOCK(input_tensor, name, use_bias, trainable, bn_trainable):
+	use_bias = True if use_bias == 1 else False
+	trainable = True if trainable == 1 else False
+	bn_trainable = True if bn_trainable == 1 else False
+	weight_decay = 0.0
 	block_name = name
-	return input_tensor
+	
+	tensors = []
+	kernel_sizes = [[1, 3], [1, 5], [3, 1], [5, 1]]
+	top_down_pyramid_size = input_tensor.shape[-1]
+
+	for i in range(len(kernel_sizes)):
+		tensor = tf.keras.layers.Conv2D(
+			filters=top_down_pyramid_size//4, 
+			kernel_size=[1, 1], 
+			padding='same', 
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(weight_decay), 
+			trainable=trainable, 
+			name=block_name+'_conv1_'+str(i))(input_tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_conv1_'+str(i)+'_bn')(tensor)
+		tensor = tf.keras.layers.Activation('relu')(tensor)
+
+		tensor = tf.keras.layers.Conv2D(
+			filters=top_down_pyramid_size//4, 
+			kernel_size=kernel_sizes[i], 
+			padding='same', 
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(weight_decay), 
+			trainable=trainable, 
+			name=block_name+'_conv2_'+str(i))(tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_conv2_'+str(i)+'_bn')(tensor)
+		tensor = tf.keras.layers.Activation('relu')(tensor)
+
+		tensor = tf.keras.layers.Conv2D(
+			filters=top_down_pyramid_size//4, 
+			kernel_size=[1, 1], 
+			padding='same', 
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(weight_decay), 
+			trainable=trainable, 
+			name=block_name+'_conv3_'+str(i))(tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_conv3_'+str(i)+'_bn')(tensor)
+		tensor = tf.keras.layers.Activation('relu')(tensor)
+
+		tensors.append(tensor)
+
+	tensor = tf.concat(values=tensors, axis=-1)
+	tensor = tf.keras.layers.Conv2D(
+			filters=top_down_pyramid_size, 
+			kernel_size=[1, 1], 
+			padding='same', 
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(weight_decay), 
+			trainable=trainable, 
+			name=block_name+'rfe_conv4')(tensor)
+	tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_conv4_bn')(tensor)
+	tensor = tf.keras.layers.Activation('relu')(tensor)
+	tensor = tf.keras.layers.Add()([tensor, input_tensor])
+
+	return tensor
