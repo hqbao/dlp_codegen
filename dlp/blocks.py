@@ -211,7 +211,8 @@ def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable
 		tensors = []
 		for i in range(depth):
 			tensor = tf.keras.layers.Conv2D(
-				filters=(2**i)*filters, 
+				# filters=(2**i)*filters, 
+				filters=filters,
 				kernel_size=[3, 3], 
 				strides=[2, 2], 
 				padding='same',
@@ -225,7 +226,8 @@ def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable
 
 		for i in range(depth-1, 0, -1):
 			tensor = tf.keras.layers.Conv2D(
-				filters=(2**i)*filters, 
+				# filters=(2**i)*filters, 
+				filters=filters,
 				kernel_size=[3, 3], 
 				strides=[1, 1], 
 				padding='same',
@@ -237,7 +239,8 @@ def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable
 			tensor = tf.keras.layers.Activation('relu')(tensor)
 
 			tensor = tf.keras.layers.Conv2D(
-				filters=(2**(i-1))*filters, 
+				# filters=(2**(i-1))*filters, 
+				filters=filters,
 				kernel_size=[3, 3], 
 				strides=[1, 1], 
 				padding='same',
