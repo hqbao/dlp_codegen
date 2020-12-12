@@ -19,6 +19,7 @@ def train(dataset_name, image_shape, total_train_examples, total_test_examples, 
 		
 	weights_file_name = 'weights_'+dataset_name+'.h5'
 	weight_file_path = output_path+'/'+weights_file_name
+	restapi.download_weights(encoded_token=encoded_token, weight_file_path=weight_file_path)
 	if os.path.isfile(weight_file_path):
 		model.load_weights(weight_file_path, by_name=True)
 
