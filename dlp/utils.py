@@ -851,15 +851,22 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 
 		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
 		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
-		image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=randint(0, 2))
+		
+		aug = randint(0, 4)
 
-		if randint(0, 1) == 0:
+		if aug == 0:
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
+
+		if aug == 1:
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
+
+		if aug == 2:
 			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
-		if randint(0, 1) == 1:
+		if aug == 3:
 			image = augcolor(image=image, ishape=ishape)
 
-		if randint(0, 1) == 1:
+		if aug == 4:
 			image = np.mean(image, axis=-1, keepdims=True)
 			image = np.concatenate([image, image, image], axis=-1)
 
@@ -894,15 +901,22 @@ def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 
 		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
 		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
-		image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=randint(0, 2))
 
-		if randint(0, 1) == 0:
+		aug = randint(0, 4)
+
+		if aug == 0:
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
+
+		if aug == 1:
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
+
+		if aug == 2:
 			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
-		if randint(0, 1) == 1:
+		if aug == 3:
 			image = augcolor(image=image, ishape=ishape)
 
-		if randint(0, 1) == 1:
+		if aug == 4:
 			image = np.mean(image, axis=-1, keepdims=True)
 			image = np.concatenate([image, image, image], axis=-1)
 
