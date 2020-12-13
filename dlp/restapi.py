@@ -81,6 +81,9 @@ def download_weights(encoded_token, weight_file_path):
 	msg_code, msg_resp = get(url='https://ai-designer.io/api/aimodel/detail', query={'id': id}, token=jwt_token)
 	if msg_code == 1000:
 		weights_url = msg_resp['weights']
+		if not weights_url or 'https://' not in weights_url:
+			return
+
 		with requests.get(weights_url, stream=True) as r:
 			# r.raise_for_status()
 			with open(weight_file_path, 'wb') as f:
