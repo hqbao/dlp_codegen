@@ -1259,7 +1259,7 @@ def genxy_hmr(dataset, image_dir_path, ishape, total_examples, batch_size):
 			# Color augmentation
 			pix = augcolor(image=pix, ishape=ishape)
 
-			# Flip
+			# Flip - This is not working, please check
 			# pix, points = fliplr_landmark(image=pix, points=points, ishape=ishape, mode=randint(0, 1))
 
 			# Black & white
