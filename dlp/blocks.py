@@ -34,11 +34,14 @@ def SPLITTED_LAYER(input_tensor, order):
 	return input_tensor[order]
 
 def ADD_LAYER(tensor1, tensor2):
+	'''
+	Arguments
+		tensor1: Can be None
+		tensor2: Must not be None
+	'''
+
 	if tensor1 == None:
 		return tensor2
-
-	if tensor2 == None:
-		return tensor1
 
 	return tf.keras.layers.Add()([tensor1, tensor2])
 
@@ -57,14 +60,34 @@ def DROPOUT_LAYER(input_tensor, rate, trainable, name):
 	trainable = True if trainable == 1 else False
 	return tf.keras.layers.Dropout(rate=rate)(input_tensor, training=trainable)
 
+def ORDINAL_LAYER(input_tensor, order, total):
+	return input_tensor, order, total
+
 def CONCAT_LAYER(tensor1, tensor2, axis):
-	if tensor1 == None:
-		return tensor2
+	'''
+	Arguments
+		tensor1: Can be None or set of tensor, chunks
+		tensor2: is set of input_tensor, order, total
+	'''
 
-	if tensor2 == None:
-		return tensor1
+	input_tensor, order, total = tensor2
+	if tensor1 is None:
+		chunks = total*[None]
+		chunks[order] = input_tensor
+	else:
+		tensor, chunks = tensor1
+		chunks[order] = input_tensor
 
-	return tf.concat(values=[tensor1, tensor2], axis=axis)
+	incomplete_chunks = [] # At last Concat layer, this will be a complete chunk set
+	for i in range(len(chunks)):
+		chunk = chunks[i]
+		if chunk is not None:
+			incomplete_chunks.append(chunks[i])
+
+	if len(incomplete_chunks) == len(chunks): # Chunks fully filled, should not return chunks for next layer is non Concat layer
+		return tf.concat(values=incomplete_chunks, axis=axis)
+
+	return tf.concat(values=incomplete_chunks, axis=axis), chunks
 
 def RESHAPE_LAYER(input_tensor, new_shape):
 	return tf.reshape(tensor=input_tensor, shape=new_shape)

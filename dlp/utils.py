@@ -1053,6 +1053,15 @@ def get_dataset_info(dataset_name):
 			'test_anno_file_path': 'face1024/test1024.txt',
 			'test_image_dir_path': 'face1024/test1024',
 		},
+		'face1024x1024': {
+			'total_classes': 1,
+			'total_train_examples': 500, # 976
+			'total_test_examples': 100, # 226
+			'train_anno_file_path': 'face1024x1024/train1024x1024.txt',
+			'train_image_dir_path': 'face1024x1024/train1024x1024',
+			'test_anno_file_path': 'face1024x1024/test1024x1024.txt',
+			'test_image_dir_path': 'face1024x1024/test1024x1024',
+		},
 		'faceali128x128': {
 			'total_heatpoints': 5,
 			'train_anno_file_path': 'faceali128x128/train.txt',
