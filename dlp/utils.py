@@ -1260,7 +1260,7 @@ def genxy_hmr(dataset, image_dir_path, ishape, total_examples, batch_size):
 			pix = augcolor(image=pix, ishape=ishape)
 
 			# Flip
-			pix, points = fliplr_landmark(image=pix, points=points, ishape=ishape, mode=randint(0, 1))
+			# pix, points = fliplr_landmark(image=pix, points=points, ishape=ishape, mode=randint(0, 1))
 
 			# Black & white
 			pix = np.mean(pix, axis=-1, keepdims=True)

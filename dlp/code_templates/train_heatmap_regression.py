@@ -3,8 +3,8 @@ def train(dataset_name, image_shape, total_train_examples, total_test_examples, 
 	output_path = './outputs'
 	train_anno_file_path = dataset_info['train_anno_file_path']
 	train_image_dir_path = dataset_info['train_image_dir_path']
-	test_anno_file_path = dataset_info['test_anno_file_path']
-	test_image_dir_path = dataset_info['test_image_dir_path']
+	# test_anno_file_path = dataset_info['test_anno_file_path']
+	# test_image_dir_path = dataset_info['test_image_dir_path']
 	ishape = image_shape
 	total_heatpoints = dataset_info['total_heatpoints']
 	total_epoches = epochs
