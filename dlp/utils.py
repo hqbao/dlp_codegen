@@ -1250,6 +1250,7 @@ def genxy_hmr(dataset, image_dir_path, ishape, total_examples, batch_size):
 
 		for j in range(batch_size):
 			image_file_name, points = dataset[i*batch_size+j]
+			points = copy.deepcopy(points)
 			pix = io.imread(image_dir_path+'/'+image_file_name)
 			pix = np.array(pix, dtype='float32')
 
