@@ -148,9 +148,9 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 
 		if procedure == 'heatmap_regression':
 			code_lines.append('')
-			code_lines.append('\theatmap_4dtensor = '+output_tensor_name+' - '+input_tensor_name)
+			code_lines.append('\theatmap_4dtensor = '+output_tensor_name+' - '+input_tensor_name+'/255')
 			code_lines.append('\ttensor = heatmap_4dtensor[0] # (h, w, 5), batch_size = 1')
-			code_lines.append('\ttensor = tf.where(condition=tf.math.greater(x=tensor, y=192), x=tensor, y=tensor*0)')
+			code_lines.append('\ttensor = tf.where(condition=tf.math.greater(x=tensor, y=0.4), x=tensor, y=tensor*0)')
 			code_lines.append('\ttensor = tf.transpose(a=tensor, perm=[2, 0, 1]) # (5, h, w)')
 			code_lines.append('\thm1 = tf.reshape(tensor=tensor[0], shape=[-1])')
 			code_lines.append('\thm2 = tf.reshape(tensor=tensor[1], shape=[-1])')
