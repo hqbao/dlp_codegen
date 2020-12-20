@@ -50,8 +50,8 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 
 		print('\nEpoch '+str(epoch)+'\nTrain')
 		for batch in range(total_train_examples):
-			batchx_4dtensor, batchy_2dtensor, _ = next(gen)
-			batch_loss = model.train_on_batch(batchx_4dtensor, batchy_2dtensor)
+			batchx_4dtensor, batchy_3dtensor, _ = next(gen)
+			batch_loss = model.train_on_batch(batchx_4dtensor, batchy_3dtensor)
 			train_loss[epoch, batch] = batch_loss
 
 			print('-', end='')
@@ -74,8 +74,8 @@ def train(dataset_name, image_shape, scale_sizes, anchor_sizes, iou_thresholds, 
 
 		print('\nTest')
 		for batch in range(total_test_examples):
-			batchx_4dtensor, batchy_2dtensor, bboxes = next(gen)
-			batch_loss = model.train_on_batch(batchx_4dtensor, batchy_2dtensor)
+			batchx_4dtensor, batchy_3dtensor, bboxes = next(gen)
+			batch_loss = model.train_on_batch(batchx_4dtensor, batchy_3dtensor)
 			test_loss[epoch, batch] = batch_loss
 			prediction = model.predict_on_batch(batchx_4dtensor)
 			boxclz_2dtensor, valid_outputs = utils.nms(

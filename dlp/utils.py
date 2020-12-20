@@ -885,9 +885,10 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 			continue
 
 		batchy_2dtensor = tf.concat(values=[clz_2dtensor, loc_2dtensor], axis=-1) # (h*w*k, total_classes+1+4)
+		batchy_3dtensor = tf.expand_dims(input=batchy_2dtensor, axis=0)
 		batchx_4dtensor = tf.constant(value=[image], dtype='float32')
 
-		yield batchx_4dtensor, batchy_2dtensor, bboxes
+		yield batchx_4dtensor, batchy_3dtensor, bboxes
 
 def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_sampling, scale_range):
 	'''
@@ -945,9 +946,10 @@ def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 			continue
 
 		batchy_2dtensor = tf.concat(values=y_tiers, axis=0) # (h1*w1*k1 + h2*w2*k2 + ... + hn*wn*kn, total_classes+1+4)
+		batchy_3dtensor = tf.expand_dims(input=batchy_2dtensor, axis=0)
 		batchx_4dtensor = tf.constant(value=[image], dtype='float32')
 
-		yield batchx_4dtensor, batchy_2dtensor, bboxes
+		yield batchx_4dtensor, batchy_3dtensor, bboxes
 
 def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_examples, total_classes, anchor_sampling):
 	'''
@@ -1021,9 +1023,10 @@ def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 		tier4_y = tf.concat(values=[tire4_clz_2dtensor, tire4_loc_2dtensor], axis=-1) # (h4*w4*k4, total_classes+1+4)
 
 		batchy_2dtensor = tf.concat(values=[tier1_y, tier2_y, tier3_y, tier4_y], axis=0) # (h1*w1*k1 + h2*w2*k2 + h3*w3*k3 + h4*w4*k4, total_classes+1+4)
+		batchy_3dtensor = tf.expand_dims(input=batchy_2dtensor, axis=0)
 		batchx_4dtensor = tf.constant(value=[image], dtype='float32')
 
-		yield batchx_4dtensor, batchy_2dtensor, bboxes
+		yield batchx_4dtensor, batchy_3dtensor, bboxes
 
 def get_dataset_info(dataset_name):
 	'''

@@ -154,11 +154,14 @@ def LOSS_FUNC_OD4(input_tensor, name, total_classes, lamda=1.0):
 		'''
 		https://arxiv.org/pdf/1512.02325.pdf
 		Arguments
-			y_true: (h*w*k, total_classes+1+4)
+			y_true: (1, h*w*k, total_classes+1+4)
 			y_pred: (h*w*k, total_classes+1+4)
 		Return
 			loss
 		'''
+
+		y_true = tf.reshape(tensor=y_true, shape=[-1, total_classes+1+4])
+		y_pred = tf.reshape(tensor=y_pred, shape=[-1, total_classes+1+4])
 
 		true_clz_2dtensor = y_true[:, :total_classes+1] # (h*w*k, total_classes+1)
 		pred_clz_2dtensor = y_pred[:, :total_classes+1] # (h*w*k, total_classes+1)
