@@ -150,7 +150,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 		procedure = inference['procedure']
 
 		if procedure == 'image_classification':
-			test_type = inference['test_type']
+			test_type = inference['testType']
 			if test_type == 'digits_recognition':
 				code_lines.append('')
 				code_lines.append('\ttensor = tf.math.argmax(input='+output_tensor_name+', axis=-1) # (batch_size,)')

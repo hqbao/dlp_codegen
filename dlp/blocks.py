@@ -92,102 +92,8 @@ def CONCAT_LAYER(tensor1, tensor2, axis):
 def RESHAPE_LAYER(input_tensor, new_shape):
 	return tf.reshape(tensor=input_tensor, shape=new_shape)
 
-def CAST_LAYER(tensor, dtype):
-	return tf.cast(x=tensor, dtype=dtype)
-
-def LOSS_FUNC_HMR(input_tensor, name):
-	def heatmap_loss(y_true, y_pred):
-		'''
-		Arguments
-			y_true: (batch_size, h, w, total_heatpoints)
-			y_pred: (batch_size, h, w, total_heatpoints)
-		Return
-			loss
-		'''
-
-		_, h, w, total_heatpoints = y_pred.shape
-
-		y_true = tf.reshape(tensor=y_true, shape=[-1, h*w*total_heatpoints])
-		y_pred = tf.reshape(tensor=y_pred, shape=[-1, h*w*total_heatpoints])
-
-		diff = y_true - y_pred # (batch_size, h*w*total_heatpoints)
-		diff = tf.math.abs(x=diff) # (batch_size, h*w*total_heatpoints)
-		loss = tf.math.reduce_sum(input_tensor=diff, axis=-1) # (batch_size,)
-		loss = tf.math.reduce_mean(input_tensor=loss, axis=-1) 
-
-		return loss
-
-	return heatmap_loss
-
-def LOSS_FUNC_IC(input_tensor, name):
-	return tf.keras.losses.categorical_crossentropy
-
-def LOSS_FUNC_OD4(input_tensor, name, total_classes, lamda=1.0):
-	'''
-	'''
-
-	def smooth_l1(y_true, y_pred):
-		'''
-		'''
-
-		HUBER_DELTA = 1.0
-
-		x = tf.math.abs(y_true - y_pred)
-		x = tf.keras.backend.switch(x < HUBER_DELTA, 0.5*x**2, HUBER_DELTA*(x - 0.5*HUBER_DELTA))
-		return  x
-
-	def balanced_l1(y_true, y_pred):
-		'''
-		https://arxiv.org/pdf/1904.02701.pdf
-		'''
-
-		alpha = 0.5
-		gamma = 1.5
-		b = 19.085
-		C = 0
-
-		x = tf.math.abs(y_true - y_pred)
-		x = tf.keras.backend.switch(x < 1.0, (alpha*x + alpha/b)*tf.math.log(b*x + 1) - alpha*x, gamma*x + C)
-		return  x
-
-	def ssd_loss(y_true, y_pred):
-		'''
-		https://arxiv.org/pdf/1512.02325.pdf
-		Arguments
-			y_true: (1, h*w*k, total_classes+1+4)
-			y_pred: (h*w*k, total_classes+1+4)
-		Return
-			loss
-		'''
-
-		y_true = tf.reshape(tensor=y_true, shape=[-1, total_classes+1+4])
-		y_pred = tf.reshape(tensor=y_pred, shape=[-1, total_classes+1+4])
-
-		true_clz_2dtensor = y_true[:, :total_classes+1] # (h*w*k, total_classes+1)
-		pred_clz_2dtensor = y_pred[:, :total_classes+1] # (h*w*k, total_classes+1)
-		true_loc_2dtensor = y_true[:, total_classes+1:] # (h*w*k, 4)
-		pred_loc_2dtensor = y_pred[:, total_classes+1:] # (h*w*k, 4)
-
-		sum_true_clz_2dtensor = tf.math.reduce_sum(input_tensor=true_clz_2dtensor, axis=-1) # (h*w*k,)
-		selected_clz_indices = tf.where(
-			condition=tf.math.equal(x=sum_true_clz_2dtensor, y=1)) # foreground, background
-		selected_loc_indices = tf.where(
-			condition=tf.math.logical_and(
-				x=tf.math.equal(x=sum_true_clz_2dtensor, y=1),
-				y=tf.math.not_equal(x=true_clz_2dtensor[:, -1], y=1))) # foreground
-
-		true_clz_2dtensor = tf.gather_nd(params=true_clz_2dtensor, indices=selected_clz_indices) # (fb, total_classes+1)
-		pred_clz_2dtensor = tf.gather_nd(params=pred_clz_2dtensor, indices=selected_clz_indices) # (fb, total_classes+1)
-		true_loc_2dtensor = tf.gather_nd(params=true_loc_2dtensor, indices=selected_loc_indices) # (f, 4)
-		pred_loc_2dtensor = tf.gather_nd(params=pred_loc_2dtensor, indices=selected_loc_indices) # (f, 4)
-
-		clz_loss = tf.keras.backend.categorical_crossentropy(true_clz_2dtensor, pred_clz_2dtensor) # (fb,)
-		loc_loss = tf.math.reduce_sum(input_tensor=smooth_l1(true_loc_2dtensor, pred_loc_2dtensor), axis=-1) # (f,)
-		loss = tf.math.reduce_mean(clz_loss) + lamda*tf.math.reduce_mean(loc_loss)
-
-		return loss
-
-	return ssd_loss
+def CAST_LAYER(input_tensor, dtype):
+	return tf.cast(x=input_tensor, dtype=dtype)
 
 def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, bn_trainable, activation, name, repeat):
 	use_bias = True if use_bias == 1 else False
@@ -208,104 +114,6 @@ def CONV2D_BLOCK(input_tensor, filters, kernel_size, strides, padding, use_bias,
 			kernel_regularizer=tf.keras.regularizers.l2(0.0))(tensor)
 		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+'_'+str(i)+'_bn')(tensor)
 		tensor = tf.keras.layers.Activation(activation)(tensor)
-
-	return tensor
-
-def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable, repeat):
-	use_bias = True if use_bias == 1 else False
-	trainable = True if trainable == 1 else False
-	bn_trainable = True if bn_trainable == 1 else False
-	block_name = name
-	
-	tensor = input_tensor
-	filters = tensor.shape[-1];
-
-	for blk in range(repeat):
-		tensor = tf.keras.layers.Conv2D(
-			filters=filters, 
-			kernel_size=[3, 3], 
-			strides=[1, 1], 
-			padding='same',
-			use_bias=use_bias, 
-			kernel_regularizer=tf.keras.regularizers.l2(0.0), 
-			trainable=trainable, 
-			name=block_name+str(blk)+'_first_hourglass_conv')(tensor)
-		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_first_hourglass_bn')(tensor)
-		tensor = tf.keras.layers.Activation('relu')(tensor)
-		first_conv_tensor = tensor
-
-		tensors = []
-		for i in range(depth):
-			tensor = tf.keras.layers.Conv2D(
-				# filters=(2**i)*filters, 
-				filters=filters,
-				kernel_size=[3, 3], 
-				strides=[2, 2], 
-				padding='same',
-				use_bias=use_bias, 
-				kernel_regularizer=tf.keras.regularizers.l2(0.0), 
-				trainable=trainable, 
-				name=block_name+str(blk)+'_encoder_stage_'+str(i)+'_conv')(tensor)
-			tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_encoder_stage_'+str(i)+'_bn')(tensor)
-			tensor = tf.keras.layers.Activation('relu')(tensor)
-			tensors.append(tensor)
-
-		for i in range(depth-1, 0, -1):
-			tensor = tf.keras.layers.Conv2D(
-				# filters=(2**i)*filters, 
-				filters=filters,
-				kernel_size=[3, 3], 
-				strides=[1, 1], 
-				padding='same',
-				use_bias=use_bias, 
-				kernel_regularizer=tf.keras.regularizers.l2(0.0), 
-				trainable=trainable, 
-				name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_conv1')(tensor)
-			tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_bn1')(tensor)
-			tensor = tf.keras.layers.Activation('relu')(tensor)
-
-			tensor = tf.keras.layers.Conv2D(
-				# filters=(2**(i-1))*filters, 
-				filters=filters,
-				kernel_size=[3, 3], 
-				strides=[1, 1], 
-				padding='same',
-				use_bias=use_bias, 
-				kernel_regularizer=tf.keras.regularizers.l2(0.0), 
-				trainable=trainable, 
-				name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_conv2')(tensor)
-			tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_bn2')(tensor)
-			tensor = tf.keras.layers.Activation('relu')(tensor)
-
-			tensor = tf.keras.layers.UpSampling2D(size=(2, 2))(tensor)
-			tensor = tf.keras.layers.Add()([tensor, tensors[i-1]])
-
-		tensor = tf.keras.layers.Conv2D(
-			filters=filters, 
-			kernel_size=[3, 3], 
-			strides=[1, 1], 
-			padding='same',
-			use_bias=use_bias, 
-			kernel_regularizer=tf.keras.regularizers.l2(0.0), 
-			trainable=trainable, 
-			name=block_name+str(blk)+'_decoder_stage_0_conv1')(tensor)
-		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_0_bn1')(tensor)
-		tensor = tf.keras.layers.Activation('relu')(tensor)
-
-		tensor = tf.keras.layers.Conv2D(
-			filters=filters, 
-			kernel_size=[3, 3], 
-			strides=[1, 1], 
-			padding='same',
-			use_bias=use_bias, 
-			kernel_regularizer=tf.keras.regularizers.l2(0.0), 
-			trainable=trainable, 
-			name=block_name+str(blk)+'_decoder_stage_0_conv2')(tensor)
-		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_0_bn2')(tensor)
-		tensor = tf.keras.layers.Activation('relu')(tensor)
-
-		tensor = tf.keras.layers.UpSampling2D(size=(2, 2))(tensor)
-		tensor = tf.keras.layers.Add()([tensor, first_conv_tensor])
 
 	return tensor
 
@@ -543,3 +351,198 @@ def RFE_BLOCK(input_tensor, name, use_bias, trainable, bn_trainable):
 	tensor = tf.keras.layers.Add()([tensor, input_tensor])
 
 	return tensor
+
+def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable, repeat):
+	use_bias = True if use_bias == 1 else False
+	trainable = True if trainable == 1 else False
+	bn_trainable = True if bn_trainable == 1 else False
+	block_name = name
+	
+	tensor = input_tensor
+	filters = tensor.shape[-1];
+
+	for blk in range(repeat):
+		tensor = tf.keras.layers.Conv2D(
+			filters=filters, 
+			kernel_size=[3, 3], 
+			strides=[1, 1], 
+			padding='same',
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(0.0), 
+			trainable=trainable, 
+			name=block_name+str(blk)+'_first_hourglass_conv')(tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_first_hourglass_bn')(tensor)
+		tensor = tf.keras.layers.Activation('relu')(tensor)
+		first_conv_tensor = tensor
+
+		tensors = []
+		for i in range(depth):
+			tensor = tf.keras.layers.Conv2D(
+				# filters=(2**i)*filters, 
+				filters=filters,
+				kernel_size=[3, 3], 
+				strides=[2, 2], 
+				padding='same',
+				use_bias=use_bias, 
+				kernel_regularizer=tf.keras.regularizers.l2(0.0), 
+				trainable=trainable, 
+				name=block_name+str(blk)+'_encoder_stage_'+str(i)+'_conv')(tensor)
+			tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_encoder_stage_'+str(i)+'_bn')(tensor)
+			tensor = tf.keras.layers.Activation('relu')(tensor)
+			tensors.append(tensor)
+
+		for i in range(depth-1, 0, -1):
+			tensor = tf.keras.layers.Conv2D(
+				# filters=(2**i)*filters, 
+				filters=filters,
+				kernel_size=[3, 3], 
+				strides=[1, 1], 
+				padding='same',
+				use_bias=use_bias, 
+				kernel_regularizer=tf.keras.regularizers.l2(0.0), 
+				trainable=trainable, 
+				name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_conv1')(tensor)
+			tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_bn1')(tensor)
+			tensor = tf.keras.layers.Activation('relu')(tensor)
+
+			tensor = tf.keras.layers.Conv2D(
+				# filters=(2**(i-1))*filters, 
+				filters=filters,
+				kernel_size=[3, 3], 
+				strides=[1, 1], 
+				padding='same',
+				use_bias=use_bias, 
+				kernel_regularizer=tf.keras.regularizers.l2(0.0), 
+				trainable=trainable, 
+				name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_conv2')(tensor)
+			tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_'+str(i)+'_bn2')(tensor)
+			tensor = tf.keras.layers.Activation('relu')(tensor)
+
+			tensor = tf.keras.layers.UpSampling2D(size=(2, 2))(tensor)
+			tensor = tf.keras.layers.Add()([tensor, tensors[i-1]])
+
+		tensor = tf.keras.layers.Conv2D(
+			filters=filters, 
+			kernel_size=[3, 3], 
+			strides=[1, 1], 
+			padding='same',
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(0.0), 
+			trainable=trainable, 
+			name=block_name+str(blk)+'_decoder_stage_0_conv1')(tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_0_bn1')(tensor)
+		tensor = tf.keras.layers.Activation('relu')(tensor)
+
+		tensor = tf.keras.layers.Conv2D(
+			filters=filters, 
+			kernel_size=[3, 3], 
+			strides=[1, 1], 
+			padding='same',
+			use_bias=use_bias, 
+			kernel_regularizer=tf.keras.regularizers.l2(0.0), 
+			trainable=trainable, 
+			name=block_name+str(blk)+'_decoder_stage_0_conv2')(tensor)
+		tensor = tf.keras.layers.BatchNormalization(trainable=bn_trainable, name=block_name+str(blk)+'_decoder_stage_0_bn2')(tensor)
+		tensor = tf.keras.layers.Activation('relu')(tensor)
+
+		tensor = tf.keras.layers.UpSampling2D(size=(2, 2))(tensor)
+		tensor = tf.keras.layers.Add()([tensor, first_conv_tensor])
+
+	return tensor
+
+def OUTPUT_LAYER(input_tensor):
+	return input_tensor
+
+def LOSS_FUNC_HMR(input_tensor, name):
+	def heatmap_loss(y_true, y_pred):
+		'''
+		Arguments
+			y_true: (batch_size, h, w, total_heatpoints)
+			y_pred: (batch_size, h, w, total_heatpoints)
+		Return
+			loss
+		'''
+
+		_, h, w, total_heatpoints = y_pred.shape
+
+		y_true = tf.reshape(tensor=y_true, shape=[-1, h*w*total_heatpoints])
+		y_pred = tf.reshape(tensor=y_pred, shape=[-1, h*w*total_heatpoints])
+
+		diff = y_true - y_pred # (batch_size, h*w*total_heatpoints)
+		diff = tf.math.abs(x=diff) # (batch_size, h*w*total_heatpoints)
+		loss = tf.math.reduce_sum(input_tensor=diff, axis=-1) # (batch_size,)
+		loss = tf.math.reduce_mean(input_tensor=loss, axis=-1) 
+
+		return loss
+
+	return heatmap_loss
+
+def LOSS_FUNC_IC(input_tensor, name):
+	return tf.keras.losses.categorical_crossentropy
+
+def LOSS_FUNC_OD4(input_tensor, name, total_classes, lamda=1.0):
+	'''
+	'''
+
+	def smooth_l1(y_true, y_pred):
+		'''
+		'''
+
+		HUBER_DELTA = 1.0
+
+		x = tf.math.abs(y_true - y_pred)
+		x = tf.keras.backend.switch(x < HUBER_DELTA, 0.5*x**2, HUBER_DELTA*(x - 0.5*HUBER_DELTA))
+		return  x
+
+	def balanced_l1(y_true, y_pred):
+		'''
+		https://arxiv.org/pdf/1904.02701.pdf
+		'''
+
+		alpha = 0.5
+		gamma = 1.5
+		b = 19.085
+		C = 0
+
+		x = tf.math.abs(y_true - y_pred)
+		x = tf.keras.backend.switch(x < 1.0, (alpha*x + alpha/b)*tf.math.log(b*x + 1) - alpha*x, gamma*x + C)
+		return  x
+
+	def ssd_loss(y_true, y_pred):
+		'''
+		https://arxiv.org/pdf/1512.02325.pdf
+		Arguments
+			y_true: (1, h*w*k, total_classes+1+4)
+			y_pred: (h*w*k, total_classes+1+4)
+		Return
+			loss
+		'''
+
+		y_true = tf.reshape(tensor=y_true, shape=[-1, total_classes+1+4])
+		y_pred = tf.reshape(tensor=y_pred, shape=[-1, total_classes+1+4])
+
+		true_clz_2dtensor = y_true[:, :total_classes+1] # (h*w*k, total_classes+1)
+		pred_clz_2dtensor = y_pred[:, :total_classes+1] # (h*w*k, total_classes+1)
+		true_loc_2dtensor = y_true[:, total_classes+1:] # (h*w*k, 4)
+		pred_loc_2dtensor = y_pred[:, total_classes+1:] # (h*w*k, 4)
+
+		sum_true_clz_2dtensor = tf.math.reduce_sum(input_tensor=true_clz_2dtensor, axis=-1) # (h*w*k,)
+		selected_clz_indices = tf.where(
+			condition=tf.math.equal(x=sum_true_clz_2dtensor, y=1)) # foreground, background
+		selected_loc_indices = tf.where(
+			condition=tf.math.logical_and(
+				x=tf.math.equal(x=sum_true_clz_2dtensor, y=1),
+				y=tf.math.not_equal(x=true_clz_2dtensor[:, -1], y=1))) # foreground
+
+		true_clz_2dtensor = tf.gather_nd(params=true_clz_2dtensor, indices=selected_clz_indices) # (fb, total_classes+1)
+		pred_clz_2dtensor = tf.gather_nd(params=pred_clz_2dtensor, indices=selected_clz_indices) # (fb, total_classes+1)
+		true_loc_2dtensor = tf.gather_nd(params=true_loc_2dtensor, indices=selected_loc_indices) # (f, 4)
+		pred_loc_2dtensor = tf.gather_nd(params=pred_loc_2dtensor, indices=selected_loc_indices) # (f, 4)
+
+		clz_loss = tf.keras.backend.categorical_crossentropy(true_clz_2dtensor, pred_clz_2dtensor) # (fb,)
+		loc_loss = tf.math.reduce_sum(input_tensor=smooth_l1(true_loc_2dtensor, pred_loc_2dtensor), axis=-1) # (f,)
+		loss = tf.math.reduce_mean(clz_loss) + lamda*tf.math.reduce_mean(loc_loss)
+
+		return loss
+
+	return ssd_loss
