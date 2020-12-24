@@ -410,6 +410,9 @@ def imbalance(image):
 	'''
 	'''
 
+	if len(image.shape) != 3 or image.shape != 3:
+		return image
+
 	image[:, :, 0] += randint(0, 128)
 	image[:, :, 1] += randint(0, 128)
 	image[:, :, 2] += randint(0, 128)
@@ -420,6 +423,9 @@ def imbalance(image):
 def shine(image, ishape):
 	'''
 	'''
+
+	if len(image.shape) != 3 or image.shape != 3:
+		return image
 
 	pos = np.dstack(np.mgrid[0:ishape[0]:1, 0:ishape[1]:1])
 	center_y = randint(0, ishape[0])
@@ -497,6 +503,36 @@ def flip_image_with_boxes(image, bboxes, ishape, mode):
 
 	return image, bboxes
 
+def fliplr_with_points(image, points, ishape, mode):
+	'''
+	'''
+
+	if mode == 0:
+		image = np.fliplr(image)
+		for i in range(len(points)):
+			points[i][1] = ishape[1] - points[i][1]
+
+	return image, points
+
+def fliplr_landmark(image, points, ishape, mode):
+	'''
+	'''
+
+	if mode == 0:
+		image = np.fliplr(image)
+		for i in range(len(points)):
+			points[i][1] = ishape[1] - points[i][1]
+
+		t = points[0]
+		points[0] = points[1]
+		points[1] = t
+
+		t = points[3]
+		points[3] = points[4]
+		points[4] = t
+
+	return image, points
+
 def rotate90_image_with_boxes(image, bboxes, ishape):
 	'''
 	'''
@@ -530,6 +566,19 @@ def zoom_image_with_boxes(image, bboxes, scale):
 		bboxes[i][3] *= scale
 
 	return image, bboxes
+
+def randcrop(image, ishape):
+	'''
+	'''
+
+	max_top_padding = image.shape[0] - ishape[0]
+	max_left_padding = image.shape[1] - ishape[1]
+	origin_y = randint(0, max_top_padding)
+	origin_x = randint(0, max_left_padding)
+
+	image = image[origin_y:origin_y+ishape[0], origin_x:origin_x+ishape[1], :]
+
+	return image
 
 def randcrop_image_with_boxes(image, bboxes, ishape):
 	'''
@@ -592,6 +641,23 @@ def randcrop_image_with_boxes(image, bboxes, ishape):
 		remain_bboxes.append(bboxes[i])
 
 	return [cropped_image, remain_bboxes]
+
+def randcrop_with_points(image, points, ishape):
+	'''
+	'''
+
+	max_top_padding = image.shape[0] - ishape[0]
+	max_left_padding = image.shape[1] - ishape[1]
+	origin_y = randint(0, max_top_padding)
+	origin_x = randint(0, max_left_padding)
+
+	image = image[origin_y:origin_y+ishape[0], origin_x:origin_x+ishape[1], :]
+
+	for i in range(len(points)):
+		points[i][0] -= origin_y
+		points[i][1] -= origin_x
+
+	return image, points
 
 def place_image_with_boxes(image, position, placed_image, bboxes):
 	'''
@@ -848,25 +914,27 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 		image_id, bboxes = dataset[np.random.randint(0, len(dataset)-1)]
 		bboxes = copy.deepcopy(bboxes)
 		image = io.imread(image_dir + '/' + image_id + '.jpg')
+		assert len(image.shape) == 3, 'Image shape must be 3 axes'
+		assert image.shape[2] == 3, 'Require RBG image'
 
 		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
 		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 		
-		aug = randint(0, 4)
-
-		if aug == 0:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
+		aug = randint(0, 5)
 
 		if aug == 1:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
 
 		if aug == 2:
-			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
 
 		if aug == 3:
-			image = augcolor(image=image, ishape=ishape)
+			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
 		if aug == 4:
+			image = augcolor(image=image, ishape=ishape)
+
+		if aug == 5:
 			image = np.mean(image, axis=-1, keepdims=True)
 			image = np.concatenate([image, image, image], axis=-1)
 
@@ -899,25 +967,27 @@ def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 		image_id, bboxes = dataset[np.random.randint(0, len(dataset)-1)]
 		bboxes = copy.deepcopy(bboxes)
 		image = io.imread(image_dir + '/' + image_id + '.jpg')
+		assert len(image.shape) == 3, 'Image shape must be 3 axes'
+		assert image.shape[2] == 3, 'Require RBG image'
 
 		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
 		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
-		aug = randint(0, 4)
-
-		if aug == 0:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
+		aug = randint(0, 5)
 
 		if aug == 1:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
 
 		if aug == 2:
-			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
 
 		if aug == 3:
-			image = augcolor(image=image, ishape=ishape)
+			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
 		if aug == 4:
+			image = augcolor(image=image, ishape=ishape)
+
+		if aug == 5:
 			image = np.mean(image, axis=-1, keepdims=True)
 			image = np.concatenate([image, image, image], axis=-1)
 
@@ -971,6 +1041,8 @@ def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 			image_id, bboxes = dataset[randint(0, len(dataset)-1)]
 			bboxes = copy.deepcopy(bboxes)
 			image = io.imread(image_dir + '/' + image_id + '.jpg')
+			assert len(image.shape) == 3, 'Image shape must be 3 axes'
+			assert image.shape[2] == 3, 'Require RBG image'
 			four_images.append(image)
 			four_bboxes.append(bboxes)
 
@@ -1056,21 +1128,19 @@ def get_dataset_info(dataset_name):
 			'test_anno_file_path': 'face1024/test1024.txt',
 			'test_image_dir_path': 'face1024/test1024',
 		},
-		'face1024x1024': {
-			'total_classes': 1,
-			'total_train_examples': 500, # 976
-			'total_test_examples': 100, # 226
-			'train_anno_file_path': 'face1024x1024/train1024x1024.txt',
-			'train_image_dir_path': 'face1024x1024/train1024x1024',
-			'test_anno_file_path': 'face1024x1024/test1024x1024.txt',
-			'test_image_dir_path': 'face1024x1024/test1024x1024',
-		},
 		'faceali128x128': {
 			'total_heatpoints': 5,
 			'train_anno_file_path': 'faceali128x128/train.txt',
 			'train_image_dir_path': 'faceali128x128/train',
 			'test_anno_file_path': 'faceali128x128/test.txt',
 			'test_image_dir_path': 'faceali128x128/test',
+		},
+		'faceid128x128': {
+			'total_classes': 3000,
+			'train_anno_file_path': 'faceid128x128/train.txt',
+			'train_image_dir_path': 'faceid128x128/train',
+			'test_anno_file_path': 'faceid128x128/test.txt',
+			'test_image_dir_path': 'faceid128x128/test',
 		},
 	}
 
@@ -1145,60 +1215,21 @@ def genxy_ic(dataset, image_dir, ishape, total_classes, total_examples, batch_si
 		for j in range(batch_size):
 			image_file_name, label = dataset[i*batch_size+j]
 			image = io.imread(image_dir+'/'+image_file_name)
-			if len(image.shape)==2:
+			assert len(image.shape) >= 2, 'Image shape must be 2 or 3 axes'
+
+			if len(image.shape) == 2:
 				image = np.expand_dims(image, axis=2)
+
+			image = randcrop(image=image, ishape=ishape)
+
+			aug = randint(0, 1)
+			if aug == 1:
+				image = augcolor(image=image, ishape=ishape)
 
 			batchx_4dtensor[j] = image
 			batchy_2dtensor[j][int(label)] = 1
 
 		yield batchx_4dtensor, batchy_2dtensor
-
-def fliplr_with_points(image, points, ishape, mode):
-	'''
-	'''
-
-	if mode == 0:
-		image = np.fliplr(image)
-		for i in range(len(points)):
-			points[i][1] = ishape[1] - points[i][1]
-
-	return image, points
-
-def fliplr_landmark(image, points, ishape, mode):
-	'''
-	'''
-
-	if mode == 0:
-		image = np.fliplr(image)
-		for i in range(len(points)):
-			points[i][1] = ishape[1] - points[i][1]
-
-		t = points[0]
-		points[0] = points[1]
-		points[1] = t
-
-		t = points[3]
-		points[3] = points[4]
-		points[4] = t
-
-	return image, points
-
-def randcrop_with_points(image, points, ishape):
-	'''
-	'''
-
-	max_top_padding = image.shape[0] - ishape[0]
-	max_left_padding = image.shape[1] - ishape[1]
-	origin_y = randint(0, max_top_padding)
-	origin_x = randint(0, max_left_padding)
-
-	image = image[origin_y:origin_y+ishape[0], origin_x:origin_x+ishape[1], :]
-
-	for i in range(len(points)):
-		points[i][0] -= origin_y
-		points[i][1] -= origin_x
-
-	return image, points
 
 def genheatmaps(image, points, ishape):
 	'''
@@ -1254,24 +1285,26 @@ def genxy_hmr(dataset, image_dir_path, ishape, total_examples, batch_size):
 		for j in range(batch_size):
 			image_file_name, points = dataset[i*batch_size+j]
 			points = copy.deepcopy(points)
-			pix = io.imread(image_dir_path+'/'+image_file_name)
-			pix = np.array(pix, dtype='float32')
+			image = io.imread(image_dir_path+'/'+image_file_name)
+			assert len(image.shape) == 3, 'Image shape must be 3 axes'
 
-			# Crop
-			pix, points = randcrop_with_points(image=pix, points=points, ishape=ishape)
+			image = np.array(image, dtype='float32')
+			image, points = randcrop_with_points(image=image, points=points, ishape=ishape)
 
-			# Color augmentation
-			pix = augcolor(image=pix, ishape=ishape)
+			aug = randint(0, 2)
 
-			# Flip
-			pix, points = fliplr_landmark(image=pix, points=points, ishape=ishape, mode=randint(0, 1))
+			if aug == 1:
+				image = augcolor(image=image, ishape=ishape)
 
-			# Black & white
-			pix = np.mean(pix, axis=-1, keepdims=True)
+			if aug == 2:
+				image, points = fliplr_landmark(image=image, points=points, ishape=ishape, mode=randint(0, 1))
 
-			heatmap3d = genheatmaps(image=pix, points=points, ishape=ishape)
+			if ishape[2] == 1:
+				image = np.mean(image, axis=-1, keepdims=True)
 
-			batchx4d[j, :, :, :] = pix
+			heatmap3d = genheatmaps(image=image, points=points, ishape=ishape)
+
+			batchx4d[j, :, :, :] = image
 			batchy4d[j] = heatmap3d
 
 		yield batchx4d, batchy4d
