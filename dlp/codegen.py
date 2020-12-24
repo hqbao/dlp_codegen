@@ -72,6 +72,7 @@ def traverse(nodes, serialisation, conn2d, prev_vertex, vertex):
 def gen_model_part(serialisation, current_code_lines, inference=None):
 	input_tensor_name = None
 	output_tensor_name = None
+	cutting_output_tensor_name = None
 	loss_func_name = None
 	code_lines = []
 
@@ -104,7 +105,9 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			elif func_name == 'CONCAT_LAYER':
 				code_line = tensor_name+' = blocks.'+func_name+'(tensor1='+tensor_name+', tensor2='+_tensor_name+', axis='+str(params['axis'])+')'
 		else:
-			func_input = 'input_tensor=tensor'+str(prev_vertex)
+			prev_var_name = 'tensor'+str(prev_vertex)
+			var_name = 'tensor'+str(vertex)
+			func_input = 'input_tensor='+prev_var_name
 			for param in params:
 				value = params[param]
 
@@ -125,11 +128,11 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 
 				func_input += ', '+param+'='+value
 
-			prev_var_name = 'tensor'+str(prev_vertex)
-			var_name = 'tensor'+str(vertex)
-
 			if node['blockType'] == 'INPUT_LAYER':
 				input_tensor_name = var_name
+
+			if node['blockType'] == 'OUTPUT_LAYER':
+				cutting_output_tensor_name = var_name
 
 			if 'LOSS_FUNC' in node['blockType']:
 				output_tensor_name = prev_var_name
@@ -141,10 +144,26 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 		code_lines.append('\t'+code_line)
 
 	if inference is not None:
+		if cutting_output_tensor_name is not None:
+			output_tensor_name = cutting_output_tensor_name
+
 		procedure = inference['procedure']
 
 		if procedure == 'image_classification':
-			pass
+			test_type = inference['test_type']
+			if test_type == 'digits_recognition':
+				code_lines.append('')
+				code_lines.append('\ttensor = tf.math.argmax(input='+output_tensor_name+', axis=-1) # (batch_size,)')
+				code_lines.append('\t'+output_tensor_name+' = tensor')
+				code_lines.append('\t'+loss_func_name+' = None')
+				code_lines.append('')
+
+			if test_type == 'face_id':
+				code_lines.append('')
+				code_lines.append('\ttensor = tf.math.l2_normalize(x='+output_tensor_name+', axis=-1) # (batch_size, embedding_dims)')
+				code_lines.append('\t'+output_tensor_name+' = tensor')
+				code_lines.append('\t'+loss_func_name+' = None')
+				code_lines.append('')
 
 		if procedure == 'heatmap_regression':
 			min_valid_heat = inference['minValidHeat']
