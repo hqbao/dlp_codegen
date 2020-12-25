@@ -149,7 +149,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 
 		procedure = inference['procedure']
 
-		if procedure == 'image_classification':
+		if procedure == 'image-classification':
 			test_type = inference['testType']
 			if test_type == 'digits-recognition':
 				code_lines.append('')
@@ -165,7 +165,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 				code_lines.append('\t'+loss_func_name+' = None')
 				code_lines.append('')
 
-		if procedure == 'heatmap_regression':
+		if procedure == 'heatmap-regression':
 			min_valid_heat = inference['minValidHeat']
 
 			code_lines.append('')
@@ -188,7 +188,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			code_lines.append('\t'+loss_func_name+' = None')
 			code_lines.append('')
 
-		if procedure == 'object_detection':
+		if procedure == 'object-detection-1tier':
 			nsm_iou_threshold = inference['nmsIouThreshold']
 			nsm_score_threshold = inference['nmsScoreThreshold']
 			nsm_max_output_size = inference['nmsMaxOutputSize']
@@ -205,7 +205,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			code_lines.append('\t'+loss_func_name+' = None')
 			code_lines.append('')
 
-		if procedure == 'object_detection_2tiers':
+		if procedure == 'object-detection-2tiers':
 			nsm_iou_threshold = inference['nmsIouThreshold']
 			nsm_score_threshold = inference['nmsScoreThreshold']
 			nsm_max_output_size = inference['nmsMaxOutputSize']
@@ -225,7 +225,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			code_lines.append('\t'+loss_func_name+' = None')
 			code_lines.append('')
 
-		if procedure == 'object_detection_3tiers':
+		if procedure == 'object-detection-3tiers':
 			nsm_iou_threshold = inference['nmsIouThreshold']
 			nsm_score_threshold = inference['nmsScoreThreshold']
 			nsm_max_output_size = inference['nmsMaxOutputSize']
@@ -246,7 +246,7 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			code_lines.append('\t'+loss_func_name+' = None')
 			code_lines.append('')
 
-		if procedure == 'object_detection_4tiers':
+		if procedure == 'object-detection-4tiers':
 			nsm_iou_threshold = inference['nmsIouThreshold']
 			nsm_score_threshold = inference['nmsScoreThreshold']
 			nsm_max_output_size = inference['nmsMaxOutputSize']

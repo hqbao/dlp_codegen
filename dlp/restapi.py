@@ -73,7 +73,7 @@ def delete(url, query, token):
 	except Exception as e:
 		return 2001, res.status_code
 
-def download_weights(encoded_token, weight_file_path):
+def download_weights(encoded_token, weights_file_path):
 	token = json.loads(encoded_token)
 	id = token['id']
 	jwt_token = token['jwtToken']
@@ -86,19 +86,19 @@ def download_weights(encoded_token, weight_file_path):
 
 		with requests.get(weights_url, stream=True) as r:
 			# r.raise_for_status()
-			with open(weight_file_path, 'wb') as f:
+			with open(weights_file_path, 'wb') as f:
 				for chunk in r.iter_content(chunk_size=8192):
 					# If you have chunk encoded response uncomment if
 					# and set chunk_size parameter to None.
 					#if chunk: 
 					f.write(chunk)
 
-def update_train_result(encoded_token, weight_file_path, weights_file_name, epoch_train_loss, epoch_test_loss, epoch_tp, epoch_fp, epoch_fn):
+def update_train_result(encoded_token, weights_file_path, weights_file_name, epoch_train_loss, epoch_test_loss, epoch_tp, epoch_fp, epoch_fn):
 	token = json.loads(encoded_token)
 	id = token['id']
 	jwt_token = token['jwtToken']
 
-	files = {'file': (weights_file_name, open(weight_file_path, 'rb'))}
+	files = {'file': (weights_file_name, open(weights_file_path, 'rb'))}
 	msg_code, msg_resp = post_file(url='https://ai-designer.io/upload/weights', query={}, files=files, data={}, token=None)
 	if msg_code != 1000:
 		return False
