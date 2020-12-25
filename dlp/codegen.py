@@ -151,14 +151,14 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 
 		if procedure == 'image_classification':
 			test_type = inference['testType']
-			if test_type == 'digits_recognition':
+			if test_type == 'digits-recognition':
 				code_lines.append('')
 				code_lines.append('\ttensor = tf.math.argmax(input='+output_tensor_name+', axis=-1) # (batch_size,)')
 				code_lines.append('\t'+output_tensor_name+' = tensor')
 				code_lines.append('\t'+loss_func_name+' = None')
 				code_lines.append('')
 
-			if test_type == 'face_id':
+			if test_type == 'face-id':
 				code_lines.append('')
 				code_lines.append('\ttensor = tf.math.l2_normalize(x='+output_tensor_name+', axis=-1) # (batch_size, embedding_dims)')
 				code_lines.append('\t'+output_tensor_name+' = tensor')
