@@ -277,8 +277,8 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 	current_code_lines += code_lines
 
 def gen_train_part(datagen_node, code_lines):
-	train_procedure = datagen_node['params']['train_procedure'].lower()
-	file = open(pkg_resources.resource_filename(__name__, 'code_templates/train_'+train_procedure+'.py'), 'r')
+	train_procedure = datagen_node['params']['train_procedure']
+	file = open(pkg_resources.resource_filename(__name__, 'code_templates/train-'+train_procedure+'.py'), 'r')
 	lines = file.readlines()
 	for i in range(len(lines)):
 		code_line = lines[i][:-1]
@@ -286,7 +286,7 @@ def gen_train_part(datagen_node, code_lines):
 
 	code_lines.append('');
 
-	if train_procedure == 'image_classification':
+	if train_procedure == 'image-classification':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
@@ -295,7 +295,7 @@ def gen_train_part(datagen_node, code_lines):
 			', epochs='+str(datagen_node['params']['epochs'])+
 			')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection':
+	elif train_procedure == 'object-detection-1tier':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
@@ -305,7 +305,7 @@ def gen_train_part(datagen_node, code_lines):
 			', epochs='+str(datagen_node['params']['epochs'])+
 			')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection_2tiers':
+	elif train_procedure == 'object-detection-2tiers':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
@@ -314,7 +314,7 @@ def gen_train_part(datagen_node, code_lines):
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection_3tiers':
+	elif train_procedure == 'object-detection-3tiers':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
@@ -323,16 +323,7 @@ def gen_train_part(datagen_node, code_lines):
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection_4tiers':
-		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
-			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
-			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
-			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
-			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
-			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
-			', epochs='+str(datagen_node['params']['epochs'])+')');
-		code_lines.append('')
-	elif train_procedure == 'heatmap_regression':
+	elif train_procedure == 'heatmap-regression':
 		code_lines.append('train(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
 			', total_train_examples='+str(datagen_node['params']['total_train_examples'])+
@@ -343,8 +334,8 @@ def gen_train_part(datagen_node, code_lines):
 		code_lines.append('')
 
 def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, settings):
-	train_procedure = datagen_node['params']['train_procedure'].lower()
-	file = open(pkg_resources.resource_filename(__name__, 'code_templates/convert_'+train_procedure+'.py'), 'r')
+	train_procedure = datagen_node['params']['train_procedure']
+	file = open(pkg_resources.resource_filename(__name__, 'code_templates/convert-'+train_procedure+'.py'), 'r')
 	lines = file.readlines()
 	for i in range(len(lines)):
 		code_line = lines[i][:-1]
@@ -352,22 +343,13 @@ def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, s
 
 	code_lines.append('');
 
-	if train_procedure == 'image_classification':
+	if train_procedure == 'image-classification':
 		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', weights_file_path=\''+weights_file_path+'\''+
 			', output_path=\''+output_path+'\''+
 			')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection':
-		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
-			', weights_file_path=\''+weights_file_path+'\''+
-			', output_path=\''+output_path+'\''+
-			', image_shape='+json.dumps(datagen_node['params']['image_shape'])+
-			', scale_sizes='+json.dumps(datagen_node['params']['scale_sizes'])+
-			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
-			')');
-		code_lines.append('')
-	elif train_procedure == 'object_detection_2tiers':
+	elif train_procedure == 'object-detection-1tier':
 		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', weights_file_path=\''+weights_file_path+'\''+
 			', output_path=\''+output_path+'\''+
@@ -376,7 +358,7 @@ def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, s
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection_3tiers':
+	elif train_procedure == 'object-detection-2tiers':
 		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', weights_file_path=\''+weights_file_path+'\''+
 			', output_path=\''+output_path+'\''+
@@ -385,7 +367,7 @@ def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, s
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			')');
 		code_lines.append('')
-	elif train_procedure == 'object_detection_4tiers':
+	elif train_procedure == 'object-detection-3tiers':
 		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', weights_file_path=\''+weights_file_path+'\''+
 			', output_path=\''+output_path+'\''+
@@ -394,7 +376,7 @@ def gen_convert_part(datagen_node, code_lines, weights_file_path, output_path, s
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			')');
 		code_lines.append('')
-	elif train_procedure == 'heatmap_regression':
+	elif train_procedure == 'heatmap-regression':
 		code_lines.append('convert(dataset_name='+json.dumps(datagen_node['params']['dataset_name'])+
 			', weights_file_path=\''+weights_file_path+'\''+
 			', output_path=\''+output_path+'\''+
