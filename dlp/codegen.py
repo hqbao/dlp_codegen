@@ -302,6 +302,7 @@ def gen_train_part(datagen_node, code_lines):
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
+			', scale_range='+json.dumps(datagen_node['params']['scale_range'])+
 			', epochs='+str(datagen_node['params']['epochs'])+
 			')');
 		code_lines.append('')
@@ -312,6 +313,7 @@ def gen_train_part(datagen_node, code_lines):
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
+			', scale_range='+json.dumps(datagen_node['params']['scale_range'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
 		code_lines.append('')
 	elif train_procedure == 'object-detection-3tiers':
@@ -321,6 +323,7 @@ def gen_train_part(datagen_node, code_lines):
 			', anchor_sizes='+json.dumps(datagen_node['params']['anchor_sizes'])+
 			', iou_thresholds='+json.dumps(datagen_node['params']['iou_thresholds'])+
 			', anchor_sampling='+json.dumps(datagen_node['params']['anchor_sampling'])+
+			', scale_range='+json.dumps(datagen_node['params']['scale_range'])+
 			', epochs='+str(datagen_node['params']['epochs'])+')');
 		code_lines.append('')
 	elif train_procedure == 'heatmap-regression':

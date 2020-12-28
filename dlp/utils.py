@@ -905,7 +905,7 @@ def gentiery(bboxes, abox_2dtensor, iou_thresholds, total_classes, anchor_sampli
 
 	return clz_2dtensor, loc_2dtensor, no_match_anchors, not_enough_neg_anchors
 
-def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_examples, total_classes, anchor_sampling):
+def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_examples, total_classes, anchor_sampling, scale_range):
 	'''
 	'''
 
@@ -917,7 +917,7 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 		assert len(image.shape) == 3, 'Image shape must be 3 axes'
 		assert image.shape[2] == 3, 'Require RBG image'
 
-		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=0.25)
+		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
 		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 		
 		aug = randint(0, 5)
