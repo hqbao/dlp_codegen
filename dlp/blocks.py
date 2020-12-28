@@ -352,6 +352,17 @@ def RFE_BLOCK(input_tensor, name, use_bias, trainable, bn_trainable):
 
 	return tensor
 
+def OD_HEAD_BLOCK(input_tensor, k):
+	tensor = input_tensor
+	total_classes = tensor.shape[-1] - 1 - 4
+	tensor = tf.reshape(tensor=tensor, shape=[-1, k, tensor.shape[-1]]) # (-1, k, total_classes+1+4)
+	clz_tensor = tensor[:, :, :total_classes+1] # (-1, k, total_classes+1)
+	loc_tensor = tensor[:, :, total_classes+1:] # (-1, k, 4)
+	clz_tensor = tf.keras.layers.Activation('softmax')(clz_tensor) # (-1, k, total_classes+1)
+	tensor = tf.concat(values=[clz_tensor, loc_tensor], axis=-1) # (-1, k, total_classes+1+4)
+	tensor = tf.reshape(tensor=tensor, shape=[-1, total_classes+1+4]) # (-1, k, total_classes+1+4)
+	return tensor
+
 def HOURGLASS_BLOCK(input_tensor, name, depth, use_bias, trainable, bn_trainable, repeat):
 	use_bias = True if use_bias == 1 else False
 	trainable = True if trainable == 1 else False
@@ -480,7 +491,7 @@ def LOSS_FUNC_HMR(input_tensor, name):
 def LOSS_FUNC_IC(input_tensor, name):
 	return tf.keras.losses.categorical_crossentropy
 
-def LOSS_FUNC_OD4(input_tensor, name, total_classes, lamda=1.0):
+def LOSS_FUNC_OD(input_tensor, name, total_classes, lamda=1.0):
 	'''
 	'''
 
