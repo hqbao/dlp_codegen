@@ -938,9 +938,6 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 			image = np.mean(image, axis=-1, keepdims=True)
 			image = np.concatenate([image, image, image], axis=-1)
 
-		for i in range(len(bboxes)):
-			bboxes[i] = bboxes[i][:4]+[0]
-
 		clz_2dtensor, loc_2dtensor, no_match_anchors, _ = gentiery(
 			bboxes=bboxes, 
 			abox_2dtensor=abox_2dtensor, 
@@ -990,9 +987,6 @@ def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 		if aug == 5:
 			image = np.mean(image, axis=-1, keepdims=True)
 			image = np.concatenate([image, image, image], axis=-1)
-
-		for i in range(len(bboxes)):
-			bboxes[i] = bboxes[i][:4]+[0]
 
 		y_tiers = []
 		has_match_anchors = False
@@ -1047,9 +1041,6 @@ def genxy_od4(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 			four_bboxes.append(bboxes)
 
 		image, bboxes = create_image_with_boxes(images=four_images, anno=four_bboxes, ishape=ishape, mode=modes[i])
-
-		for i in range(len(bboxes)):
-			bboxes[i] = bboxes[i][:4]+[0]
 
 		tire1_clz_2dtensor, tire1_loc_2dtensor, no_match_anchors1, _ = gentiery(
 			bboxes=bboxes, 
@@ -1141,6 +1132,15 @@ def get_dataset_info(dataset_name):
 			'train_image_dir_path': 'faceid128x128/train',
 			'test_anno_file_path': 'faceid128x128/test.txt',
 			'test_image_dir_path': 'faceid128x128/test',
+		},
+		'quizanswer': {
+			'total_classes': 2,
+			'total_train_examples': 800,
+			'total_test_examples': 170,
+			'train_anno_file_path': 'quizanswer/train.txt',
+			'train_image_dir_path': 'quizanswer/train',
+			'test_anno_file_path': 'quizanswer/test.txt',
+			'test_image_dir_path': 'quizanswer/test',
 		},
 	}
 
