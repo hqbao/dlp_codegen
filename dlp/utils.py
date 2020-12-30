@@ -533,7 +533,7 @@ def fliplr_landmark(image, points, ishape, mode):
 
 	return image, points
 
-def rotate90_image_with_boxes(image, bboxes, ishape):
+def rotate90_image_with_boxes(image, bboxes):
 	'''
 	'''
 
@@ -789,8 +789,8 @@ def create_image_with_boxes(images, anno, ishape, mode):
 		image, bboxes = nest_image_with_boxes(images, anno, ishape)
 		image = augcolor(image=image, ishape=ishape)
 
-	if randint(0, 1) == 0:
-		image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+	# if randint(0, 1) == 0: # This doesn't work when height & width are not same
+	# 	image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
 	if randint(0, 1) == 1: # BW
 		image = np.mean(image, axis=-1, keepdims=True)
@@ -917,19 +917,19 @@ def genxy_od(dataset, image_dir, ishape, abox_2dtensor, iou_thresholds, total_ex
 		assert len(image.shape) == 3, 'Image shape must be 3 axes'
 		assert image.shape[2] == 3, 'Require RBG image'
 
-		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
-		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
-		
 		aug = randint(0, 5)
 
 		if aug == 1:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
+			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes)
+
+		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
+		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
 		if aug == 2:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
 
 		if aug == 3:
-			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
 
 		if aug == 4:
 			image = augcolor(image=image, ishape=ishape)
@@ -967,19 +967,19 @@ def genxy_mod(dataset, image_dir, ishape, abox_2dtensors, iou_thresholds, total_
 		assert len(image.shape) == 3, 'Image shape must be 3 axes'
 		assert image.shape[2] == 3, 'Require RBG image'
 
-		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
-		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
-
 		aug = randint(0, 5)
 
 		if aug == 1:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
+			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes)
+
+		image, bboxes = zoom_image_with_boxes(image=image, bboxes=bboxes, scale=randint(scale_range[0], scale_range[1])/1000)
+		image, bboxes = randcrop_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
 
 		if aug == 2:
-			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=1)
 
 		if aug == 3:
-			image, bboxes = rotate90_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape)
+			image, bboxes = flip_image_with_boxes(image=image, bboxes=bboxes, ishape=ishape, mode=2)
 
 		if aug == 4:
 			image = augcolor(image=image, ishape=ishape)
