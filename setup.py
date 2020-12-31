@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
     name='dlp',
     packages=['dlp'],
-    version='1.0.69',
+    version='1.0.70',
     license='MIT', # Chose a license from here: https://help.github.com/articles/licensing-a-repository
     description='Code generator',
     author='BAO',

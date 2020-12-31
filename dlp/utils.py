@@ -1149,8 +1149,8 @@ def get_dataset_info(dataset_name):
 	if os.path.isdir(dataset_name) is not True:
 		# Download
 		os.system('pip install kaggle')
-		os.environ['KAGGLE_USERNAME'] = "baohoa"
-		os.environ['KAGGLE_KEY'] = "b3a9925824d1a70778605d41d55af27f"
+		os.environ['KAGGLE_USERNAME'] = 'baohoa'
+		os.environ['KAGGLE_KEY'] = 'b3a9925824d1a70778605d41d55af27f'
 		os.system('kaggle datasets download -d baohoa/'+dataset_name)
 
 		# Unzip

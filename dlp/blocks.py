@@ -3,7 +3,7 @@ import tensorflow as tf
 def INPUT_LAYER(input_tensor, batch_size, dtype, input_shape):
 	return tf.keras.layers.Input(shape=input_shape, dtype=dtype)
 
-def CONV2D_LAYER(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, name):
+def CONV2D_LAYER(input_tensor, filters, kernel_size, strides, padding, use_bias, trainable, activation, name):
 	use_bias = True if use_bias == 1 else False
 	trainable = True if trainable == 1 else False
 	return tf.keras.layers.Conv2D(
@@ -11,15 +11,20 @@ def CONV2D_LAYER(input_tensor, filters, kernel_size, strides, padding, use_bias,
 		kernel_size=kernel_size, 
 		strides=strides,
 		padding=padding, 
+		activation=activation,
 		use_bias=use_bias, 
 		trainable=trainable, 
 		kernel_regularizer=tf.keras.regularizers.l2(0.0))(input_tensor)
 
-def MAXPOOL2D_LAYER(input_tensor, pool_size, strides, padding):
-	return tf.keras.layers.MaxPool2D(pool_size=pool_size, strides=strides, padding=padding)(input_tensor)
+def POOL2D_LAYER(input_tensor, type, pool_size, strides, padding):
+	if type == 'max-pool':
+		return tf.keras.layers.MaxPool2D(pool_size=pool_size, strides=strides, padding=padding)(input_tensor)
 
-def UPSAMPLING2D_LAYER(input_tensor, size):
-	return tf.keras.layers.UpSampling2D(size=size, interpolation='bilinear')(input_tensor)
+	if type == 'avg-pool':
+		return tf.keras.layers.AveragePooling2D(pool_size=pool_size, strides=strides, padding=padding)(input_tensor)
+
+def UPSAMPLING2D_LAYER(input_tensor, size, interpolation):
+	return tf.keras.layers.UpSampling2D(size=size, interpolation=interpolation)(input_tensor)
 
 def BATCH_NORM_LAYER(input_tensor, trainable):
 	return tf.keras.layers.BatchNormalization(trainable=trainable, name='lateral_P2_bn')(input_tensor)
@@ -48,10 +53,11 @@ def ADD_LAYER(tensor1, tensor2):
 def FLATTEN_LAYER(input_tensor):
 	return tf.keras.layers.Flatten()(input_tensor)
 
-def DENSE_LAYER(input_tensor, units, trainable, use_bias, name):
+def DENSE_LAYER(input_tensor, units, trainable, use_bias, activation, name):
 	use_bias = True if use_bias == 1 else False
 	return tf.keras.layers.Dense(
 		units=units, 
+		activation=activation,
 		use_bias=use_bias, 
 		trainable=trainable, 
 		name=name)(input_tensor)
