@@ -55,6 +55,7 @@ def FLATTEN_LAYER(input_tensor):
 
 def DENSE_LAYER(input_tensor, units, trainable, use_bias, activation, name):
 	use_bias = True if use_bias == 1 else False
+	trainable = True if trainable == 1 else False
 	return tf.keras.layers.Dense(
 		units=units, 
 		activation=activation,
