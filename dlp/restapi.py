@@ -87,7 +87,7 @@ def download_weights(encoded_token, weights_file_path):
 	jwt_token = token['jwtToken']
 
 	msg_code, msg_resp = get(url=dlp_services_base_url+'/get-aimodel', query={'id': id}, token=jwt_token)
-	if msg_code == 1000:
+	if msg_code % 100 == 0:
 		weights_url = msg_resp['weights']
 		if not weights_url or 'https://' not in weights_url:
 			return
@@ -110,7 +110,7 @@ def update_train_result(encoded_token, weights_file_path, weights_file_name, epo
 
 	files = {'file': (weights_file_name, open(weights_file_path, 'rb'))}
 	msg_code, msg_resp = post_file(url=dlp_services_base_url+'/upload-weights', query={}, files=files, data={}, token=None)
-	if msg_code != 1000:
+	if msg_code % 100 != 0:
 		return False
 
 	body = {
@@ -122,7 +122,7 @@ def update_train_result(encoded_token, weights_file_path, weights_file_name, epo
 		'eFN': epoch_fn,
 	}
 	msg_code, msg_resp = patch(url=dlp_services_base_url+'/update-aimodel-with-train-result?id='+id, query={}, body=body, token=jwt_token)
-	if msg_code != 1000:
+	if msg_code % 100 != 0:
 		return False
 
 	return True
