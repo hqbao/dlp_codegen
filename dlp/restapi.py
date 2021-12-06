@@ -73,12 +73,20 @@ def delete(url, query, token):
 	except Exception as e:
 		return 2001, res.status_code
 
+dlp_services_base_url = 'https://dlp-services.co-bee.com:8003'
+
+def set_dlp_services_base_url(url):
+	global dlp_services_base_url
+	dlp_services_base_url = url
+
 def download_weights(encoded_token, weights_file_path):
+	global dlp_services_base_url
+
 	token = json.loads(encoded_token)
 	id = token['id']
 	jwt_token = token['jwtToken']
 
-	msg_code, msg_resp = get(url='https://ai-designer.io/api/aimodel/detail', query={'id': id}, token=jwt_token)
+	msg_code, msg_resp = get(url=dlp_services_base_url+'/get-aimodel', query={'id': id}, token=jwt_token)
 	if msg_code == 1000:
 		weights_url = msg_resp['weights']
 		if not weights_url or 'https://' not in weights_url:
@@ -94,12 +102,14 @@ def download_weights(encoded_token, weights_file_path):
 					f.write(chunk)
 
 def update_train_result(encoded_token, weights_file_path, weights_file_name, epoch_train_loss, epoch_test_loss, epoch_tp, epoch_fp, epoch_fn):
+	global dlp_services_base_url
+
 	token = json.loads(encoded_token)
 	id = token['id']
 	jwt_token = token['jwtToken']
 
 	files = {'file': (weights_file_name, open(weights_file_path, 'rb'))}
-	msg_code, msg_resp = post_file(url='https://ai-designer.io/upload/weights', query={}, files=files, data={}, token=None)
+	msg_code, msg_resp = post_file(url=dlp_services_base_url+'/upload-weights', query={}, files=files, data={}, token=None)
 	if msg_code != 1000:
 		return False
 
@@ -111,7 +121,7 @@ def update_train_result(encoded_token, weights_file_path, weights_file_name, epo
 		'eFP': epoch_fp,
 		'eFN': epoch_fn,
 	}
-	msg_code, msg_resp = patch(url='https://ai-designer.io/api/aimodel/update-train-result?id='+id, query={}, body=body, token=jwt_token)
+	msg_code, msg_resp = patch(url=dlp_services_base_url+'/update-aimodel-with-train-result?id='+id, query={}, body=body, token=jwt_token)
 	if msg_code != 1000:
 		return False
 
