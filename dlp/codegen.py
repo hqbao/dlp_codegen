@@ -194,10 +194,10 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			nsm_max_output_size = inference['nmsMaxOutputSize']
 
 			code_lines.append('')
-			code_lines.append('\tishape = kwargs["image_shape"]')
-			code_lines.append('\tssizes = kwargs["scale_sizes"]')
-			code_lines.append('\tasizes = kwargs["anchor_sizes"]')
-			code_lines.append('\ttotal_classes = kwargs["total_classes"]')
+			code_lines.append('\tishape = kwargs[\'image_shape\']')
+			code_lines.append('\tssizes = kwargs[\'scale_sizes\']')
+			code_lines.append('\tasizes = kwargs[\'anchor_sizes\']')
+			code_lines.append('\ttotal_classes = kwargs[\'total_classes\']')
 			code_lines.append('\tabox_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes, asizes=asizes), dtype=\'float32\') # (h*w*k, 4)')
 			code_lines.append('\ttensor, valid_outputs = utils.nms(abox_2dtensor=abox_2dtensor, prediction='+output_tensor_name+', nsm_iou_threshold='+str(nsm_iou_threshold)+', nsm_score_threshold='+str(nsm_score_threshold)+', nsm_max_output_size='+str(nsm_max_output_size)+', total_classes=total_classes)')
 			code_lines.append('\tvalid_outputs = tf.expand_dims(input=valid_outputs, axis=0)')
@@ -211,10 +211,10 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			nsm_max_output_size = inference['nmsMaxOutputSize']
 
 			code_lines.append('')
-			code_lines.append('\tishape = kwargs["image_shape"]')
-			code_lines.append('\tssizes = kwargs["scale_sizes"]')
-			code_lines.append('\tasizes = kwargs["anchor_sizes"]')
-			code_lines.append('\ttotal_classes = kwargs["total_classes"]')
+			code_lines.append('\tishape = kwargs[\'image_shape\']')
+			code_lines.append('\tssizes = kwargs[\'scale_sizes\']')
+			code_lines.append('\tasizes = kwargs[\'anchor_sizes\']')
+			code_lines.append('\ttotal_classes = kwargs[\'total_classes\']')
 			code_lines.append('\ta1box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[0], asizes=asizes[0]), dtype=\'float32\') # (h1*w1*k1, 4)')
 			code_lines.append('\ta2box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[1], asizes=asizes[1]), dtype=\'float32\') # (h2*w2*k2, 4)')
 			code_lines.append('\tabox_2dtensors = [a1box_2dtensor, a2box_2dtensor]')
@@ -231,10 +231,10 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			nsm_max_output_size = inference['nmsMaxOutputSize']
 
 			code_lines.append('')
-			code_lines.append('\tishape = kwargs["image_shape"]')
-			code_lines.append('\tssizes = kwargs["scale_sizes"]')
-			code_lines.append('\tasizes = kwargs["anchor_sizes"]')
-			code_lines.append('\ttotal_classes = kwargs["total_classes"]')
+			code_lines.append('\tishape = kwargs[\'image_shape\']')
+			code_lines.append('\tssizes = kwargs[\'scale_sizes\']')
+			code_lines.append('\tasizes = kwargs[\'anchor_sizes\']')
+			code_lines.append('\ttotal_classes = kwargs[\'total_classes\']')
 			code_lines.append('\ta1box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[0], asizes=asizes[0]), dtype=\'float32\') # (h1*w1*k1, 4)')
 			code_lines.append('\ta2box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[1], asizes=asizes[1]), dtype=\'float32\') # (h2*w2*k2, 4)')
 			code_lines.append('\ta3box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[2], asizes=asizes[2]), dtype=\'float32\') # (h3*w3*k3, 4)')
@@ -252,10 +252,10 @@ def gen_model_part(serialisation, current_code_lines, inference=None):
 			nsm_max_output_size = inference['nmsMaxOutputSize']
 
 			code_lines.append('')
-			code_lines.append('\tishape = kwargs["image_shape"]')
-			code_lines.append('\tssizes = kwargs["scale_sizes"]')
-			code_lines.append('\tasizes = kwargs["anchor_sizes"]')
-			code_lines.append('\ttotal_classes = kwargs["total_classes"]')
+			code_lines.append('\tishape = kwargs[\'image_shape\']')
+			code_lines.append('\tssizes = kwargs[\'scale_sizes\']')
+			code_lines.append('\tasizes = kwargs[\'anchor_sizes\']')
+			code_lines.append('\ttotal_classes = kwargs[\'total_classes\']')
 			code_lines.append('\ta1box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[0], asizes=asizes[0]), dtype=\'float32\') # (h1*w1*k1, 4)')
 			code_lines.append('\ta2box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[1], asizes=asizes[1]), dtype=\'float32\') # (h2*w2*k2, 4)')
 			code_lines.append('\ta3box_2dtensor = tf.constant(value=utils.genanchors(isize=ishape[:2], ssize=ssizes[2], asizes=asizes[2]), dtype=\'float32\') # (h3*w3*k3, 4)')
